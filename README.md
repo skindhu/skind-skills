@@ -7,7 +7,6 @@ Claude Code skills shared by skindhu for improving daily work and learning effic
 ## Prerequisites
 
 - Python 3.11+ environment
-- Claude Code installed
 
 ## Installation
 
