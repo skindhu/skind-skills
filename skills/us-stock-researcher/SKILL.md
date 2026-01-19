@@ -25,7 +25,14 @@ Institutional-grade deep analysis of US stock SEC filings, outputting profession
 ```
 WebSearch: "{company_name} latest 10-K 10-Q SEC filing"
 ```
-Inform user: "根据搜索，{TICKER} 最新的 {10-K/10-Q} 是 {period}，将分析该期财报"
+
+**IMPORTANT: Always analyze the MOST RECENT filing by date, regardless of type (10-K or 10-Q).**
+
+Example decision logic:
+- If latest 10-K is 2024-12-31 and latest 10-Q is 2025-09-30 → Use 10-Q (more recent)
+- If latest 10-K is 2025-01-15 and latest 10-Q is 2024-09-30 → Use 10-K (more recent)
+
+Inform user: "根据搜索，{TICKER} 最新的财报是 {10-K/10-Q}（截至 {period}），将分析该期财报"
 
 ### Step 2: Download Filing
 
