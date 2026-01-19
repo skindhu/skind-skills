@@ -1,0 +1,20 @@
+{
+  "name": "skind-skills",
+  "owner": {
+    "name": "skindhu",
+    "email": "ai.arctic.tree@gmail.com"
+  },
+  "metadata": {
+    "description": "Skills shared by skindhu for improving work efficiency",
+    "version": "1.0.0"
+  },
+  "plugins":{
+    "name": "investment-skills",
+    "description": "Help you make investment decisions",
+    "source": "/",
+    "strict": false,
+    "skills": [
+      "./skills/us-stock-researcher"
+    ]
+  }
+}
