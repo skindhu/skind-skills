@@ -15,15 +15,10 @@ from pathlib import Path
 def get_project_root() -> Path:
     """
     Get project root directory
-    Search upward from scripts directory until finding directory containing .claude
+    Uses current working directory (cwd) as project root,
+    because Claude Code sets cwd to user's project directory when running commands.
     """
-    current = Path(__file__).resolve().parent
-    while current != current.parent:
-        if (current / ".claude").exists() or (current / ".git").exists():
-            return current
-        current = current.parent
-    # If not found, return three levels up from scripts
-    return Path(__file__).resolve().parent.parent.parent.parent
+    return Path.cwd()
 
 
 def get_default_output_dir(ticker: str) -> str:
