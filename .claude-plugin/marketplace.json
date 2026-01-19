@@ -12,7 +12,7 @@
     {
       "name": "investment-skills",
       "description": "Help you make investment decisions",
-      "source": "/",
+      "source": "./",
       "strict": false,
       "skills": [
         "./skills/us-stock-researcher"
