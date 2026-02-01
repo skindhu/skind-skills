@@ -51,6 +51,7 @@ Simply tell Claude Code:
 | Plugin | Description | Included Skills |
 |--------|-------------|-----------------|
 | **investment-skills** | Investment research and analysis | [us-stock-researcher](#us-stock-researcher) |
+| **educational-video-creator** | Educational video production | [educational-video-creator](#educational-video-creator) |
 
 ## Update Skills
 
@@ -109,6 +110,61 @@ Research PFE's financial report
 │   ├── phase1-YYYY-MM-DD.md             # Phase 1 filing analysis
 │   └── phase2-YYYY-MM-DD.md             # Phase 2 web research
 └── {TICKER}-Investment-Report-YYYY-MM-DD.md  # Final report
+```
+
+### educational-video-creator
+
+Create professional educational videos with Kurzgesagt/回形针 visual style using Remotion.
+
+**Features:**
+- 🎬 Complete video production workflow (script → storyboard → animation → audio)
+- 🎨 Kurzgesagt/回形针 flat design style with SVG animations
+- 📝 Narrative script writing with story arc and pacing
+- 🎵 Auto TTS narration generation and timeline sync
+- ✅ Automated quality assurance with style checking
+
+**Prerequisites:**
+- Node.js environment
+- `remotion-best-practices` skill (install via `npx skills add https://github.com/remotion-dev/skills --skill remotion-best-practices`)
+
+**Workflow:**
+
+| Phase | Description |
+|-------|-------------|
+| 1. Requirements | Confirm topic, audience, language, duration |
+| 1.5. Script | Write complete narrative with story arc |
+| 2. Storyboard | Break script into visual scenes with animation specs |
+| 3. Visual Design | Apply Kurzgesagt/回形针 style guide |
+| 4. Animation | Implement scenes using Remotion |
+| 4.5. Audio | Generate TTS narration and background music |
+| 5. QA | Auto style check, screenshot review, auto-fix |
+
+**Usage Examples:**
+
+```bash
+# Create an educational video
+帮我做一个关于量子计算的教学视频
+
+# Create an explainer video
+Create an explainer video about how blockchain works
+
+# Create a science video
+制作一个讲解光合作用的科普动画
+```
+
+**Output:**
+
+```
+your-workspace/
+└── remotion_video/
+    ├── src/
+    │   ├── Root.tsx
+    │   └── YourVideo/
+    │       ├── index.tsx
+    │       ├── scenes/
+    │       └── components/
+    ├── public/
+    └── package.json
 ```
 
 ## Environment Configuration
