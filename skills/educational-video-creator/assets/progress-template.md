@@ -8,6 +8,10 @@
 
 ## Phase Checklist
 
+### Prerequisites
+- [ ] `remotion-best-practices` skill installed (`npx skills add https://github.com/remotion-dev/skills --skill remotion-best-practices`)
+- [ ] Read remotion-best-practices skill for Remotion API details
+
 ### Phase 1: Requirements Gathering
 - [ ] Confirmed topic and key learning points
 - [ ] Confirmed audience (age, knowledge level)
