@@ -130,13 +130,13 @@ function scanFile(filePath: string): Issue[] {
     const fontSizeMatch = line.match(/fontSize\s*:\s*(\d+)/);
     if (fontSizeMatch) {
       const size = Number(fontSizeMatch[1]);
-      if (size < 24) {
+      if (size < 36) {
         issues.push({
           severity: "critical",
           file: relPath,
           line: lineNum,
-          message: `fontSize: ${size} (minimum: 24)`,
-          fix: "Change to 24",
+          message: `fontSize: ${size} (minimum: 36)`,
+          fix: "Change to 36 or larger",
         });
       }
     }
@@ -264,13 +264,13 @@ function scanFile(filePath: string): Issue[] {
     const sizeMatch = line.match(/\bsize\s*:\s*(\d+)/);
     if (sizeMatch) {
       const val = Number(sizeMatch[1]);
-      if (val < 48 && val > 0) {
+      if (val < 72 && val > 0) {
         issues.push({
           severity: "important",
           file: relPath,
           line: lineNum,
-          message: `Icon/element size: ${val} (minimum: 48)`,
-          fix: "Change to 48",
+          message: `Icon/element size: ${val} (minimum: 72, recommended: 96)`,
+          fix: "Change to 96",
         });
       }
     }

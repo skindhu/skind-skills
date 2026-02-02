@@ -114,19 +114,21 @@ const { fontFamily: inter } = loadInter();
 ### Font Sizes (1920x1080)
 
 ```css
---title-size: 72px;       /* Main titles */
---heading-size: 48px;     /* Section headings */
---body-size: 36px;        /* Body text, subtitles */
---caption-size: 24px;     /* Small labels, captions */
---tiny-size: 24px;        /* Disclaimers, credits (absolute minimum) */
+--title-size: 96px;       /* Main titles (minimum: 72px) */
+--heading-size: 64px;     /* Section headings (minimum: 48px) */
+--body-size: 48px;        /* Body text, labels (minimum: 40px) */
+--subtitle-size: 44px;    /* Subtitles (minimum: 40px) */
+--caption-size: 36px;     /* Small labels, captions (absolute minimum) */
 ```
+
+**Important**: These are RECOMMENDED values. Always prefer larger sizes for better visibility. The absolute minimum font size is 36px.
 
 ### Text Styling
 
 ```tsx
 // Title style
 const titleStyle = {
-  fontSize: 72,
+  fontSize: 96,
   fontWeight: 700,
   color: '#ffffff',
   textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
@@ -134,11 +136,11 @@ const titleStyle = {
 
 // Subtitle style
 const subtitleStyle = {
-  fontSize: 36,
+  fontSize: 44,
   fontWeight: 400,
   color: '#f0f0f0',
   backgroundColor: 'rgba(0,0,0,0.6)',
-  padding: '8px 16px',
+  padding: '12px 24px',
   borderRadius: 8,
 };
 ```
@@ -179,7 +181,7 @@ const subtitleStyle = {
 
 ```tsx
 // Icon component pattern
-const Icon = ({ size = 48, color = '#ffffff' }) => (
+const Icon = ({ size = 96, color = '#ffffff' }) => (
   <svg width={size} height={size} viewBox="0 0 48 48">
     {/* Simple, geometric shapes */}
     {/* Consistent stroke width */}
@@ -189,6 +191,7 @@ const Icon = ({ size = 48, color = '#ffffff' }) => (
 ```
 
 Icon Design Rules:
+- **Minimum size: 72px** (default: 96px for good visibility)
 - Use consistent stroke width (2-4px scaled)
 - Round line caps and joins
 - Simple, recognizable shapes
