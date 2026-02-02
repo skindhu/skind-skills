@@ -4,20 +4,27 @@ Write a complete narrative script before breaking it into storyboard scenes. Thi
 
 ## Table of Contents
 
-- [Why Script First](#why-script-first)
-- [Script Template](#script-template)
-- [Writing Process](#writing-process)
-  - [Step 1: Define Narrative Strategy](#step-1-define-narrative-strategy)
-  - [Step 2: Write the Full Script](#step-2-write-the-full-script)
-  - [Step 3: Annotate Pacing](#step-3-annotate-pacing)
-  - [Step 4: Self-Review](#step-4-self-review)
-- [Narrative Techniques](#narrative-techniques)
-  - [Story Arc Design](#story-arc-design)
-  - [Metaphor and Analogy Design](#metaphor-and-analogy-design)
-  - [Knowledge Scaffolding](#knowledge-scaffolding)
-  - [Emotional Curve](#emotional-curve)
-- [Script Examples](#script-examples)
-- [Review Checklist](#review-checklist)
+- [Script Writing Guide](#script-writing-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Why Script First](#why-script-first)
+  - [Script Template](#script-template)
+  - [Writing Process](#writing-process)
+    - [Step 1: Define Narrative Strategy](#step-1-define-narrative-strategy)
+    - [Step 2: Write the Full Script](#step-2-write-the-full-script)
+    - [Step 3: Annotate Pacing](#step-3-annotate-pacing)
+    - [Step 4: Self-Review](#step-4-self-review)
+  - [Narrative Techniques](#narrative-techniques)
+    - [Story Arc Design](#story-arc-design)
+    - [Metaphor and Analogy Design](#metaphor-and-analogy-design)
+    - [Knowledge Scaffolding](#knowledge-scaffolding)
+    - [Emotional Curve](#emotional-curve)
+  - [Script Examples](#script-examples)
+    - [Short Script Example (1-2 min): Why is the sky blue?](#short-script-example-1-2-min-why-is-the-sky-blue)
+  - [Review Checklist](#review-checklist)
+    - [Narrative Quality](#narrative-quality)
+    - [Educational Quality](#educational-quality)
+    - [Script Quality](#script-quality)
+    - [Completeness](#completeness)
 
 ---
 
@@ -91,16 +98,6 @@ This separation ensures:
 - **Speed up**: [Sections with high information density that should move quickly]
 - **Slow down**: [Key concepts that need time to digest]
 - **Pause**: [Moments where the audience needs to think]
-
-## Self-Review Checklist
-- [ ] Story flows coherently from start to finish
-- [ ] Knowledge builds progressively (no forward references)
-- [ ] Metaphors/analogies are appropriate and consistent
-- [ ] Tone matches the target audience
-- [ ] Duration estimate is reasonable
-- [ ] Each chapter serves a clear purpose
-- [ ] The opening hook creates genuine curiosity
-- [ ] The ending provides closure and satisfaction
 ```
 
 ---
