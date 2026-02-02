@@ -17,6 +17,15 @@
       "skills": [
         "./skills/us-stock-researcher"
       ]
+    },
+    {
+      "name": "educational-video-creator",
+      "description": "Create educational videos with Kurzgesagt/回形针 style using Remotion",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/educational-video-creator"
+      ]
     }
   ]
 }
