@@ -19,7 +19,7 @@
       ]
     },
     {
-      "name": "educational-video-creator",
+      "name": "educational-skills",
       "description": "Create educational videos with Kurzgesagt/回形针 style using Remotion",
       "source": "./",
       "strict": false,
