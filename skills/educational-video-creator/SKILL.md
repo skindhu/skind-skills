@@ -100,6 +100,8 @@ This file is critical for maintaining continuity in long conversations. Always c
 
 ### Phase 1: Requirements Gathering
 
+> 📋 Create `remotion_video/PROGRESS.md` from [progress-template.md](assets/progress-template.md) and fill in Project Info.
+
 Before starting, confirm these essential details with the user:
 
 - **Topic**: What concept/subject to explain?
@@ -111,6 +113,8 @@ Before starting, confirm these essential details with the user:
 For detailed question templates, see [requirements-guide.md](references/requirements-guide.md).
 
 ### Phase 1.5: Script Writing
+
+> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 1.5 items as you complete them.
 
 Write a complete narrative script before designing the storyboard. This phase focuses purely on **storytelling** — what to say and how to say it well — without worrying about visual specs, frame numbers, or animation parameters.
 
@@ -146,6 +150,8 @@ See [narration-guide.md](references/narration-guide.md) for audience adaptation,
 
 ### Phase 2: Storyboard Design
 
+> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 2 items as you complete them.
+
 Convert the approved script into a production-ready storyboard. The script provides **what to say**; the storyboard defines **how to show it**.
 
 Input: Completed script (approved in Phase 1.5)
@@ -167,6 +173,8 @@ See [narration-guide.md](references/narration-guide.md) for subtitle formatting 
 
 ### Phase 3: Visual Design
 
+> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 3 items as you complete them.
+
 Apply the Kurzgesagt/回形针 style:
 
 - Flat design with subtle gradients
@@ -178,6 +186,8 @@ See [style-guide.md](references/style-guide.md) for complete visual standards.
 See [visual-principles.md](references/visual-principles.md) for composition and layout.
 
 ### Phase 4: Animation Production
+
+> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 4 items as you complete them. Log key file paths in "Key files".
 
 Implement scenes using Remotion:
 
@@ -209,6 +219,8 @@ See [animation-guide.md](references/animation-guide.md) for timing and easing.
 
 ### Phase 4.5: Audio Generation
 
+> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 4.5 items as you complete them. Record audio file count.
+
 完成动画编码后，自动生成视频音频：
 
 1. **TTS 旁白生成** — 从每个场景的字幕文本生成语音
@@ -220,6 +232,8 @@ See [animation-guide.md](references/animation-guide.md) for timing and easing.
 详细步骤见 [audio-guide.md](references/audio-guide.md)
 
 ### Phase 5: Quality Assurance
+
+> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 5 items as you complete them. Record scan results in Report.
 
 完成编码后，执行自动质量检查流程：
 
