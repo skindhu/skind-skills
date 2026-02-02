@@ -4,19 +4,18 @@ Complete technical guide for adding narration and background music to educationa
 
 ## Table of Contents
 
-- [Directory Structure](#directory-structure)
-- [TTS Service: Edge TTS](#tts-service-edge-tts)
-- [TTS Generation Steps](#tts-generation-steps)
-  - [Step 1: Extract Subtitle Text](#step-1-extract-subtitle-text)
-  - [Step 2: Generate TTS Audio Per Segment](#step-2-generate-tts-audio-per-segment)
-  - [Step 3: Measure Audio Duration](#step-3-measure-audio-duration)
-  - [Step 4: Rebuild Timeline](#step-4-rebuild-timeline)
-  - [Step 5: Update constants.ts](#step-5-update-constantsts)
-  - [Step 6: Adjust Animation Keyframes](#step-6-adjust-animation-keyframes)
-- [Background Music](#background-music)
-- [AudioLayer Component](#audiolayer-component)
-- [Integration into Main Composition](#integration-into-main-composition)
-- [Update Scene Subtitle References](#update-scene-subtitle-references)
+- [Audio Generation Guide](#audio-generation-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Directory Structure](#directory-structure)
+  - [TTS Service: Edge TTS](#tts-service-edge-tts)
+  - [TTS Generation Steps](#tts-generation-steps)
+    - [Steps 1-2: 提取字幕文本 + 批量生成 TTS 音频](#steps-1-2-提取字幕文本--批量生成-tts-音频)
+    - [Steps 3-6: 测量音频时长 + 重建时间线](#steps-3-6-测量音频时长--重建时间线)
+    - [Step 6 (手动): Adjust Animation Keyframes](#step-6-手动-adjust-animation-keyframes)
+  - [Background Music](#background-music)
+  - [AudioLayer Component](#audiolayer-component)
+  - [Integration into Main Composition](#integration-into-main-composition)
+  - [Update Scene Subtitle References](#update-scene-subtitle-references)
 
 ---
 
@@ -48,9 +47,8 @@ Edge TTS is completely free with no API key required.
 pip install edge-tts
 ```
 
-**Recommended Chinese voices:**
+**Recommended Chinese voice:**
 - `zh-CN-XiaoxiaoNeural` — Female, clear and natural
-- `zh-CN-YunxiNeural` — Male, warm teaching style
 
 **Features:**
 - Speed adjustment: `--rate="-10%"` slightly slower, good for teaching
@@ -149,13 +147,18 @@ Apply this to all frame-based animation values within the affected scene (e.g., 
 
 ## Background Music
 
-Download suitable background music from Pixabay Music (free for commercial use).
+Search online for free, royalty-free background music.
 
-1. **Search keywords**: "educational ambient", "science documentary", "soft background", "calm piano"
-2. **Select**: A 2-4 minute track that loops well
-3. **Download**: MP3 format, save to `public/audio/bgm.mp3`
+1. **Search keywords**: "free background music for video", "royalty free ambient music", "creative commons background music", "CC0 music"
+2. **Recommended sources** (for reference):
+   - YouTube Audio Library (requires YouTube Studio login)
+   - Free Music Archive (freemusicarchive.org)
+   - Incompetech (incompetech.com)
+   - Other platforms offering CC0 or royalty-free licenses
+3. **Select**: A 2-4 minute track that loops well
+4. **Download**: MP3 format, save to `public/audio/bgm.mp3`
 
-Pixabay Music can be accessed at https://pixabay.com/music/ or via their API.
+**Note**: Always verify the license terms before downloading to ensure free commercial use.
 
 **Selection criteria:**
 - Instrumental only (no vocals)

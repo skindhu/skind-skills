@@ -320,6 +320,31 @@ function scanFile(filePath: string): Issue[] {
       }
     }
 
+    // --- Subtitle position check: ensure subtitle stays near bottom ---
+    if (isSubtitleComponent) {
+      const subtitleBottomMatch = line.match(/\bbottom\s*:\s*(\d+)/);
+      if (subtitleBottomMatch) {
+        const bottomVal = Number(subtitleBottomMatch[1]);
+        if (bottomVal < 60) {
+          issues.push({
+            severity: "critical",
+            file: relPath,
+            line: lineNum,
+            message: `Subtitle bottom: ${bottomVal} (below safe zone minimum: 60)`,
+            fix: "Change to 60 (standard subtitle position)",
+          });
+        } else if (bottomVal > 120) {
+          issues.push({
+            severity: "important",
+            file: relPath,
+            line: lineNum,
+            message: `Subtitle bottom: ${bottomVal} (too high, may overlap with content. Standard range: 60-120)`,
+            fix: "Change to 60 (standard subtitle position)",
+          });
+        }
+      }
+    }
+
     // --- Layout conflict: non-subtitle text entering subtitle zone ---
     if (!isSubtitleComponent) {
       // Check for bottom positioning that might enter subtitle area (Y >= 850)

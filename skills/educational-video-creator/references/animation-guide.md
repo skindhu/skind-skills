@@ -449,6 +449,59 @@ const customZoomTransition = () => ({
 });
 ```
 
+### Preventing Transparent Frames (Checkerboard Pattern)
+
+During `fade()` transitions, both the outgoing and incoming scenes may have low opacity simultaneously. Without a solid background behind them, this reveals transparent frames — displayed as a **checkerboard pattern** in Remotion preview and as black/transparent in rendered output.
+
+**Solution: Always add a persistent global background layer** in your main composition that never participates in transitions:
+
+```tsx
+import { AbsoluteFill } from 'remotion';
+import { TransitionSeries } from '@remotion/transitions';
+import { COLORS } from './constants';
+
+export const MyVideo: React.FC = () => (
+  <AbsoluteFill>
+    {/* Global background — always visible, never fades */}
+    <AbsoluteFill
+      style={{
+        background: `linear-gradient(180deg, ${COLORS.background.dark}, ${COLORS.background.medium})`,
+      }}
+    />
+
+    {/* Scenes with transitions — these fade, but background stays solid */}
+    <TransitionSeries>
+      <TransitionSeries.Sequence durationInFrames={SCENES.hook.duration}>
+        <HookScene />
+      </TransitionSeries.Sequence>
+      <TransitionSeries.Transition
+        presentation={fade()}
+        timing={linearTiming({ durationInFrames: 20 })}
+      />
+      <TransitionSeries.Sequence durationInFrames={SCENES.intro.duration}>
+        <IntroScene />
+      </TransitionSeries.Sequence>
+    </TransitionSeries>
+
+    {/* Audio layer */}
+    <AudioLayer />
+  </AbsoluteFill>
+);
+```
+
+**Additionally**, each scene component should have its own solid background as the first child element. This provides defense in depth — even if the global background is accidentally removed, no frame will be transparent.
+
+```tsx
+const HookScene: React.FC = () => (
+  <AbsoluteFill>
+    {/* Scene-level background */}
+    <AbsoluteFill style={{ backgroundColor: COLORS.background.dark }} />
+    {/* Scene content */}
+    ...
+  </AbsoluteFill>
+);
+```
+
 ## Animation Composition
 
 ### Combining Multiple Properties

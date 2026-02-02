@@ -24,19 +24,35 @@ Once installed, read the remotion-best-practices skill for Remotion API details.
 
 This skill creates videos in a dedicated `remotion_video` subdirectory within the current workspace.
 
-**First-time setup:**
+**First-time setup (recommended — non-interactive):**
 ```bash
 # Create video project directory
 mkdir -p remotion_video
 cd remotion_video
 
-# Initialize Remotion project
-npx create-video@latest --blank
-# Or with bun: bunx create-video@latest .
+# Initialize without interactive prompts
+npm init -y
+npm install remotion @remotion/cli @remotion/google-fonts react react-dom
+npm install -D typescript @types/react
 
-# Install dependencies
+# Create minimal project structure
+mkdir -p src public/audio/narration
+```
+
+Then create the required entry files:
+- `src/Root.tsx` — Main composition registry
+- `src/index.ts` — Remotion entry point with `registerRoot(Root)`
+- `remotion.config.ts` — Remotion configuration
+- `tsconfig.json` — TypeScript config
+
+**Alternative (interactive — may block in automated environments):**
+```bash
+mkdir -p remotion_video && cd remotion_video
+npx create-video@latest --blank
 npm install
 ```
+
+> **Note**: `npx create-video` may prompt for project name, package manager, etc. In CLI/automation contexts, use the non-interactive method above to avoid blocking.
 
 **Existing project:**
 ```bash
@@ -100,6 +116,8 @@ Why script first:
 - Pure text is cheap to iterate; storyboard with animation specs is expensive to revise
 - Users can easily review "is the story good?" without wading through technical details
 
+**Output**: Save the approved script as `remotion_video/script.md` for traceability and independent review.
+
 See [script-template.md](references/script-template.md) for templates and writing techniques.
 See [narration-guide.md](references/narration-guide.md) for narration style and audience adaptation.
 
@@ -118,6 +136,8 @@ Tasks:
 6. Plan the asset inventory (SVG components, colors, typography)
 
 The cognitive load is much lower than creating everything from scratch — the narrative is already decided, so you only need to focus on visual execution.
+
+**Output**: Save the completed storyboard as `remotion_video/storyboard.md` for design traceability and iteration reference.
 
 See [storyboard-template.md](references/storyboard-template.md) for templates.
 See [narration-guide.md](references/narration-guide.md) for subtitle formatting and TTS notes.
@@ -142,6 +162,23 @@ Implement scenes using Remotion:
 2. Use `useCurrentFrame()` for all animations
 3. Apply appropriate easing (spring for natural motion)
 4. Add scene transitions
+
+**Subtitle & narration rules (critical for Phase 4.5 compatibility):**
+- All narration text **must** be stored in the `NARRATION` object in `constants.ts` — never hardcode text directly in scene TSX files
+- Create an estimated `AUDIO_SEGMENTS` in `constants.ts` with approximate timing. Phase 4.5 will overwrite it with real audio-based timing
+- Subtitle components **must** reference `AUDIO_SEGMENTS.sceneKey` — never use inline segment arrays with hardcoded frame numbers
+- This ensures `rebuild-timeline.ts --write` in Phase 4.5 can update timing without modifying any scene files
+
+**Background rules (prevents transparent/checkerboard frames during transitions):**
+- The main composition **must** have a persistent `<AbsoluteFill>` background layer (using `COLORS.background`) that sits behind all scenes and never participates in transitions
+- Each scene component **must** also have its own solid background as the first child element
+- During `fade()` transitions, both scenes have reduced opacity — without a persistent background, transparent frames appear as a checkerboard pattern in preview and black in renders
+- See [animation-guide.md](references/animation-guide.md) "Preventing Transparent Frames" for the implementation pattern
+
+**Color rules (critical for Phase 5 style-scan compliance):**
+- All colors **must** be referenced via the `COLORS` object from `constants.ts` (e.g., `COLORS.accent.orange`) — never write hex values directly in TSX files
+- The only exception is `rgba()` for opacity variations (e.g., `rgba(0, 0, 0, 0.7)` for subtitle backgrounds)
+- This prevents the common issue where style-scan reports dozens of "color not in approved palette" warnings
 
 See [svg-components.md](references/svg-components.md) for component patterns.
 See [animation-guide.md](references/animation-guide.md) for timing and easing.

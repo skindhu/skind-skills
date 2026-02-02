@@ -89,6 +89,26 @@ font-weight: 400;
 font-family: 'Inter', 'Roboto', sans-serif;
 ```
 
+### Font Loading in Remotion
+
+**Important**: Remotion requires explicit font loading. Use `@remotion/google-fonts` for reliable cross-platform rendering.
+
+```tsx
+// In your Root.tsx or top-level component:
+import { loadFont } from '@remotion/google-fonts/NotoSansSC';
+import { loadFont as loadInter } from '@remotion/google-fonts/Inter';
+
+// Call loadFont() with NO arguments to load all subsets.
+// Do NOT pass subsets: ["chinese-simplified"] — Remotion v4 uses
+// Unicode range numbers ([0], [1], [2]...) as subset names,
+// not human-readable names. Passing wrong subset names causes
+// all frames to fail rendering silently.
+const { fontFamily: notoSansSC } = loadFont();
+const { fontFamily: inter } = loadInter();
+```
+
+**Common pitfall**: `loadFont({ subsets: ["chinese-simplified"] })` will **fail silently** in Remotion v4. The NotoSansSC font uses numeric Unicode range subset identifiers. Always use `loadFont()` without arguments to load all subsets.
+
 ### Font Sizes (1920x1080)
 
 ```css
