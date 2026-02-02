@@ -12,13 +12,13 @@ Create professional educational videos with Kurzgesagt/回形针 visual style us
 
 This skill requires **remotion-best-practices** for Remotion technical implementation.
 
-**Check and install:**
+**Check and install (MUST complete before Phase 1):**
 ```bash
-# Install remotion-best-practices skill if not present
-npx skills add https://github.com/remotion-dev/skills --skill remotion-best-practices
+# Check if already installed, install if not
+npx skills list 2>/dev/null | grep remotion-best-practices || npx skills add https://github.com/remotion-dev/skills --skill remotion-best-practices
 ```
 
-Once installed, read the remotion-best-practices skill for Remotion API details.
+Once installed, **read the remotion-best-practices skill** to load Remotion API details into context. This is essential — without it, Phase 4 code will have incorrect Remotion API usage.
 
 ## Project Setup
 
@@ -100,7 +100,7 @@ This file is critical for maintaining continuity in long conversations. Always c
 
 ### Phase 1: Requirements Gathering
 
-> 📋 Create `remotion_video/PROGRESS.md` from [progress-template.md](assets/progress-template.md) and fill in Project Info.
+> ⚠️ **First**: Complete the [Prerequisites](#prerequisites) section (install remotion-best-practices skill and read it). Then create `remotion_video/PROGRESS.md` from [progress-template.md](assets/progress-template.md) and fill in Project Info.
 
 Before starting, confirm these essential details with the user:
 

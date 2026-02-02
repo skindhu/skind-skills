@@ -8,9 +8,9 @@
 
 ## Phase Checklist
 
-### Prerequisites
-- [ ] `remotion-best-practices` skill installed (`npx skills add https://github.com/remotion-dev/skills --skill remotion-best-practices`)
-- [ ] Read remotion-best-practices skill for Remotion API details
+### Prerequisites (⚠️ Complete BEFORE Phase 1)
+- [ ] `remotion-best-practices` skill installed — run: `npx skills list 2>/dev/null | grep remotion-best-practices || npx skills add https://github.com/remotion-dev/skills --skill remotion-best-practices`
+- [ ] Read remotion-best-practices skill for Remotion API details (required for correct Remotion API usage in Phase 4)
 
 ### Phase 1: Requirements Gathering
 - [ ] Confirmed topic and key learning points
