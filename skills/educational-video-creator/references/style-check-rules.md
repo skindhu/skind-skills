@@ -112,11 +112,12 @@
 - **任何 absolute 定位的文字/卡片元素**底部与字幕区顶部（Y=880）间距 < 30px: 🟡重要
 
 字幕定位检查:
-- 字幕组件（SubtitleSequence / Subtitle）的 `bottom` 值应在 **40-120** 范围内
-- `bottom < 40`: 🔴严重（超出安全区底边，字幕可能被裁切）
-- `bottom > 120`: 🟡重要（字幕偏高，可能与场景内容重叠，标准值: `bottom: 40`）
+- 字幕组件（SubtitleSequence / Subtitle）的 `bottom` 值必须为 **20**
+- `bottom < 10`: 🔴严重（超出安全区底边，字幕可能被裁切）
+- `bottom > 30`: 🟡重要（字幕偏高，建议使用标准值 `bottom: 20`）
+- `bottom ≠ 20`: 🟢轻微（建议使用标准值 `bottom: 20`）
 
-**修复策略**: 元素底部侵入字幕区或与字幕间距 < 30px → 上移该元素（减小 top 值或增大 bottom 值）使其底部 ≤ 850（即与字幕区保持 ≥ 30px 间距）。字幕偏高 → 将 `bottom` 改为 40。
+**修复策略**: 元素底部侵入字幕区或与字幕间距 < 30px → 上移该元素（减小 top 值或增大 bottom 值）使其底部 ≤ 850（即与字幕区保持 ≥ 30px 间距）。字幕位置不标准 → 将 `bottom` 改为 20。
 
 ## 9. 截图审查规则（图像识别）
 
@@ -126,6 +127,14 @@
 - 读取 constants.ts 中 SCENES 对象（或等价的场景定义）
 - 每个场景取 4 帧: start（入场）、start + duration/3（1/3 帧）、start + duration*2/3（2/3 帧）、start + duration - 30（尾帧）
 - 渲染命令: `npx remotion still --frame <N> --output /tmp/style-check/scene-<name>-f<N>.png <CompositionName>`
+
+### 图像分析流程
+**重要**: 必须使用 Read 工具逐张读取每个 PNG 截图进行视觉分析。
+
+1. 列出输出目录中所有 PNG 文件
+2. **使用 Read 工具读取每个图片文件**（如 `Read /tmp/style-check/scene-hook-f0.png`）
+3. 对每张图片按下方检查项表格逐一分析
+4. 发现问题时记录：截图文件名、问题区域描述、对应源码位置、修复建议
 
 ### 图像检查项
 | 检查项 | 具体检查 | 严重级别 |

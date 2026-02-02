@@ -324,21 +324,29 @@ function scanFile(filePath: string): Issue[] {
       const subtitleBottomMatch = line.match(/\bbottom\s*:\s*(\d+)/);
       if (subtitleBottomMatch) {
         const bottomVal = Number(subtitleBottomMatch[1]);
-        if (bottomVal < 40) {
+        if (bottomVal < 10) {
           issues.push({
             severity: "critical",
             file: relPath,
             line: lineNum,
-            message: `Subtitle bottom: ${bottomVal} (below safe zone minimum: 40)`,
-            fix: "Change to 40 (standard subtitle position)",
+            message: `Subtitle bottom: ${bottomVal} (below safe zone minimum: 10)`,
+            fix: "Change to 20 (standard subtitle position)",
           });
-        } else if (bottomVal > 120) {
+        } else if (bottomVal > 30) {
           issues.push({
             severity: "important",
             file: relPath,
             line: lineNum,
-            message: `Subtitle bottom: ${bottomVal} (too high, may overlap with content. Standard range: 40-120)`,
-            fix: "Change to 40 (standard subtitle position)",
+            message: `Subtitle bottom: ${bottomVal} (non-standard, recommended: 20)`,
+            fix: "Change to 20 (standard subtitle position)",
+          });
+        } else if (bottomVal !== 20) {
+          issues.push({
+            severity: "minor",
+            file: relPath,
+            line: lineNum,
+            message: `Subtitle bottom: ${bottomVal} (standard value is 20)`,
+            fix: "Change to 20 (standard subtitle position)",
           });
         }
       }
