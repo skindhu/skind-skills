@@ -15,6 +15,7 @@ Create reusable, animated SVG components for educational videos.
   - [Animated Diagram](#animated-diagram)
   - [Staggered List](#staggered-list)
 - [Lottie Integration](#lottie-integration)
+- [Data Visualization Components](#data-visualization-components)
 - [Best Practices](#best-practices)
 
 ---
@@ -591,6 +592,280 @@ export const LottieAnimation: React.FC<{
 | Geometric animations | Character animations |
 | Data-driven visuals | Pre-designed animations |
 | Interactive elements | Decorative motion |
+
+## Data Visualization Components
+
+Animated charts and graphs for data-driven educational content. All values animate from zero to target for visual impact.
+
+### Animated Bar Chart
+
+```tsx
+interface BarChartProps {
+  data: Array<{ label: string; value: number; color?: string }>;
+  width?: number;
+  height?: number;
+  startFrame?: number;
+  staggerDelay?: number;
+}
+
+export const AnimatedBarChart: React.FC<BarChartProps> = ({
+  data,
+  width = 600,
+  height = 400,
+  startFrame = 0,
+  staggerDelay = 8,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const maxValue = Math.max(...data.map((d) => d.value));
+  const barWidth = (width - (data.length + 1) * 16) / data.length;
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      {data.map((item, i) => {
+        const progress = spring({
+          frame: frame - startFrame - i * staggerDelay,
+          fps,
+          config: { damping: 200 },
+        });
+
+        const barHeight = (item.value / maxValue) * (height - 80) * progress;
+        const x = 16 + i * (barWidth + 16);
+        const y = height - 40 - barHeight;
+
+        return (
+          <g key={i}>
+            {/* Bar */}
+            <rect
+              x={x}
+              y={y}
+              width={barWidth}
+              height={barHeight}
+              rx={4}
+              fill={item.color ?? COLORS.accent.primary}
+            />
+            {/* Value label */}
+            <text
+              x={x + barWidth / 2}
+              y={y - 8}
+              textAnchor="middle"
+              fill={COLORS.text}
+              fontSize={24}
+              fontWeight={700}
+              opacity={progress}
+            >
+              {Math.round(item.value * progress)}
+            </text>
+            {/* Category label */}
+            <text
+              x={x + barWidth / 2}
+              y={height - 12}
+              textAnchor="middle"
+              fill={COLORS.textMuted ?? '#b0b0b0'}
+              fontSize={20}
+              opacity={progress}
+            >
+              {item.label}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
+```
+
+### Animated Line Chart
+
+```tsx
+interface LineChartProps {
+  points: Array<{ x: number; y: number }>;
+  width?: number;
+  height?: number;
+  color?: string;
+  startFrame?: number;
+  drawDuration?: number;
+}
+
+export const AnimatedLineChart: React.FC<LineChartProps> = ({
+  points,
+  width = 600,
+  height = 300,
+  color,
+  startFrame = 0,
+  drawDuration = 60,
+}) => {
+  const frame = useCurrentFrame();
+  const padding = { top: 20, right: 20, bottom: 40, left: 50 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+
+  const maxX = Math.max(...points.map((p) => p.x));
+  const maxY = Math.max(...points.map((p) => p.y));
+
+  const scaledPoints = points.map((p) => ({
+    x: padding.left + (p.x / maxX) * chartW,
+    y: padding.top + chartH - (p.y / maxY) * chartH,
+  }));
+
+  const pathD = scaledPoints
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x},${p.y}`)
+    .join(' ');
+
+  // Estimate path length
+  let pathLength = 0;
+  for (let i = 1; i < scaledPoints.length; i++) {
+    const dx = scaledPoints[i].x - scaledPoints[i - 1].x;
+    const dy = scaledPoints[i].y - scaledPoints[i - 1].y;
+    pathLength += Math.sqrt(dx * dx + dy * dy);
+  }
+
+  const drawProgress = interpolate(
+    frame - startFrame,
+    [0, drawDuration],
+    [0, 1],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+  );
+
+  return (
+    <svg width={width} height={height}>
+      {/* Grid lines */}
+      {[0.25, 0.5, 0.75, 1].map((frac) => (
+        <line
+          key={frac}
+          x1={padding.left}
+          y1={padding.top + chartH * (1 - frac)}
+          x2={width - padding.right}
+          y2={padding.top + chartH * (1 - frac)}
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth={1}
+        />
+      ))}
+      {/* Animated line */}
+      <path
+        d={pathD}
+        fill="none"
+        stroke={color ?? COLORS.accent.primary}
+        strokeWidth={4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray={pathLength}
+        strokeDashoffset={pathLength * (1 - drawProgress)}
+      />
+      {/* Data points */}
+      {scaledPoints.map((p, i) => {
+        const pointProgress = interpolate(
+          frame - startFrame - (i / scaledPoints.length) * drawDuration,
+          [0, 10],
+          [0, 1],
+          { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+        );
+        return (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={6 * pointProgress}
+            fill={color ?? COLORS.accent.primary}
+          />
+        );
+      })}
+    </svg>
+  );
+};
+```
+
+### Animated Pie Chart
+
+```tsx
+interface PieChartProps {
+  segments: Array<{ label: string; value: number; color: string }>;
+  size?: number;
+  startFrame?: number;
+}
+
+export const AnimatedPieChart: React.FC<PieChartProps> = ({
+  segments,
+  size = 300,
+  startFrame = 0,
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const total = segments.reduce((sum, s) => sum + s.value, 0);
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size / 2 - 20;
+
+  const progress = spring({
+    frame: frame - startFrame,
+    fps,
+    config: { damping: 200 },
+  });
+
+  // Total sweep angle based on progress
+  const totalAngle = 360 * progress;
+  let currentAngle = -90; // Start from top
+
+  return (
+    <svg width={size} height={size}>
+      {segments.map((seg, i) => {
+        const segAngle = (seg.value / total) * totalAngle;
+        const startAngle = currentAngle;
+        const endAngle = currentAngle + segAngle;
+        currentAngle = endAngle;
+
+        const startRad = (startAngle * Math.PI) / 180;
+        const endRad = (endAngle * Math.PI) / 180;
+        const largeArc = segAngle > 180 ? 1 : 0;
+
+        const x1 = cx + radius * Math.cos(startRad);
+        const y1 = cy + radius * Math.sin(startRad);
+        const x2 = cx + radius * Math.cos(endRad);
+        const y2 = cy + radius * Math.sin(endRad);
+
+        // Skip if segment is too small to render
+        if (segAngle < 0.5) return null;
+
+        return (
+          <path
+            key={i}
+            d={`M ${cx},${cy} L ${x1},${y1} A ${radius},${radius} 0 ${largeArc},1 ${x2},${y2} Z`}
+            fill={seg.color}
+            stroke={COLORS.background?.dark ?? '#1a1a2e'}
+            strokeWidth={2}
+          />
+        );
+      })}
+    </svg>
+  );
+};
+```
+
+### Usage Example
+
+```tsx
+// Bar chart comparison
+<AnimatedBarChart
+  data={[
+    { label: '中国', value: 1400, color: COLORS.accent.rose },
+    { label: '印度', value: 1380, color: COLORS.accent.teal },
+    { label: '美国', value: 331, color: COLORS.accent.yellow },
+    { label: '日本', value: 126, color: COLORS.semantic?.neutral ?? '#74b9ff' },
+  ]}
+  startFrame={30}
+/>
+
+// Line chart trend
+<AnimatedLineChart
+  points={[
+    { x: 0, y: 10 }, { x: 1, y: 25 }, { x: 2, y: 22 },
+    { x: 3, y: 45 }, { x: 4, y: 60 }, { x: 5, y: 85 },
+  ]}
+  startFrame={30}
+/>
+```
+
+---
 
 ## Best Practices
 

@@ -16,6 +16,8 @@ Kurzgesagt/回形针 inspired visual style for educational videos.
 - [Shadows & Depth](#shadows--depth)
 - [Layout Guidelines](#layout-guidelines)
 - [Animation Style](#animation-style)
+- [Scene-Level Palette Variation](#scene-level-palette-variation)
+- [Ambient Effects](#ambient-effects)
 - [Do's and Don'ts](#dos-and-donts)
 
 ---
@@ -40,7 +42,7 @@ Kurzgesagt/回形针 inspired visual style for educational videos.
 --bg-light: #0f3460;     /* Lighter blue - highlights */
 
 /* Accent Colors */
---accent-orange: #e94560; /* Warm accent - important elements */
+--accent-rose: #e94560;   /* Warm accent - important elements */
 --accent-yellow: #f9ed69; /* Bright accent - highlights */
 --accent-teal: #00b8a9;   /* Cool accent - secondary info */
 
@@ -116,7 +118,7 @@ const { fontFamily: inter } = loadInter();
 --heading-size: 48px;     /* Section headings */
 --body-size: 36px;        /* Body text, subtitles */
 --caption-size: 24px;     /* Small labels, captions */
---tiny-size: 18px;        /* Disclaimers, credits */
+--tiny-size: 24px;        /* Disclaimers, credits (absolute minimum) */
 ```
 
 ### Text Styling
@@ -226,12 +228,29 @@ const elementGradient = {
 };
 ```
 
+### Radial Gradients
+
+Use radial gradients for spotlight/focus effects:
+
+```tsx
+// Spotlight effect - draw attention to center
+const spotlight = {
+  background: 'radial-gradient(circle at 50% 50%, rgba(79,172,254,0.15) 0%, transparent 60%)',
+};
+
+// Vignette - darken edges to focus center
+const vignette = {
+  background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
+};
+```
+
 ### Gradient Rules
 
-1. Maximum 2 colors per gradient
+1. Maximum 3 color stops per gradient (e.g., sky: light blue → deep blue → dark horizon)
 2. Subtle transitions (not harsh)
 3. Use for backgrounds and large elements
 4. Avoid gradients on small icons/text
+5. 3-stop gradients are appropriate for atmospheric effects (sky, underwater, atmosphere layers)
 
 ## Shadows & Depth
 
@@ -264,15 +283,16 @@ const elementGradient = {
 
 ```
 ┌────────────────────────────────────────────┐
+│              60px top margin               │
 │ ┌────────────────────────────────────────┐ │
 │ │                                        │ │
 │ │            Safe Content Area           │ │
-│ │              (1720 x 880)              │ │
+│ │              (1720 x 960)              │ │
 │ │                                        │ │
 │ │                                        │ │
 │ └────────────────────────────────────────┘ │
-│                                            │
-│   100px margin on all sides for 1080p      │
+│              60px bottom margin            │
+│  100px left/right, 60px top/bottom         │
 └────────────────────────────────────────────┘
 ```
 
@@ -362,6 +382,144 @@ const snappySpring = { damping: 20, stiffness: 200 };
 // Playful bounce
 const bouncySpring = { damping: 8 };
 ```
+
+## Scene-Level Palette Variation
+
+While a video maintains a consistent primary palette, individual scenes can adopt **topic-appropriate background tones** to reinforce the subject matter — a technique Kurzgesagt uses extensively.
+
+### How It Works
+
+The `COLORS` object from `constants.ts` remains the single source of truth. Scenes select background variants from a predefined set:
+
+```tsx
+// In constants.ts
+export const COLORS = {
+  // ... main palette stays the same
+  background: {
+    dark: '#1a1a2e',
+    medium: '#16213e',
+    light: '#0f3460',
+  },
+  // Scene-specific background variants — all approved by palette
+  sceneBg: {
+    space: ['#0a0a1a', '#1a1a2e'],     // Deep space
+    ocean: ['#0a1628', '#0f3460'],      // Underwater
+    biology: ['#1a2e1a', '#163e2e'],    // Organic/life
+    energy: ['#2e1a1a', '#3e1621'],     // Warm/physics
+    tech: ['#1a1a2e', '#16213e'],       // Default tech
+  },
+};
+```
+
+### Usage
+
+```tsx
+const BiologyScene: React.FC = () => (
+  <AbsoluteFill
+    style={{
+      background: `linear-gradient(180deg, ${COLORS.sceneBg.biology[0]}, ${COLORS.sceneBg.biology[1]})`,
+    }}
+  >
+    {/* Scene content */}
+  </AbsoluteFill>
+);
+```
+
+### Rules
+
+- All background colors **must** be defined in `COLORS.sceneBg` — no inline hex values
+- Accent and text colors remain unchanged across scenes (consistency)
+- Keep scene backgrounds in the same hue family as the main palette (dark, desaturated)
+- Transition between scene palettes via `fade()` — the global background layer prevents checkerboard
+
+---
+
+## Ambient Effects
+
+Background ambient elements add depth and richness to scenes. Kurzgesagt uses floating particles, stars, and subtle textures to make backgrounds feel alive.
+
+### When to Use
+
+| Scene Type | Ambient Effect |
+|------------|----------------|
+| Space/cosmos | Distant stars, nebula glow |
+| Underwater | Rising bubbles, light caustics |
+| Microscopic | Floating particles, organic shapes |
+| Atmosphere | Dust motes, cloud wisps |
+| Technology | Grid lines, data particles |
+| **UI/Data/Comparison** | **None** — keep clean |
+
+### Particle System Pattern
+
+```tsx
+const AmbientParticles: React.FC<{
+  count?: number;
+  seed?: number;
+  speed?: number;
+  sizeRange?: [number, number];
+  opacity?: number;
+}> = ({ count = 30, seed = 42, speed = 0.3, sizeRange = [2, 6], opacity = 0.3 }) => {
+  const frame = useCurrentFrame();
+
+  // Deterministic random from seed (Remotion requires deterministic rendering)
+  const particles = React.useMemo(() => {
+    const rng = (s: number) => {
+      const x = Math.sin(s) * 10000;
+      return x - Math.floor(x);
+    };
+    return Array.from({ length: count }, (_, i) => ({
+      x: rng(seed + i * 1) * 1920,
+      y: rng(seed + i * 2) * 1080,
+      size: sizeRange[0] + rng(seed + i * 3) * (sizeRange[1] - sizeRange[0]),
+      drift: rng(seed + i * 4) * 2 - 1,
+    }));
+  }, [count, seed, sizeRange]);
+
+  return (
+    <AbsoluteFill style={{ opacity }}>
+      {particles.map((p, i) => (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            left: p.x + Math.sin(frame * 0.02 + i) * 20 * p.drift,
+            top: (p.y - frame * speed + 1080) % 1080,
+            width: p.size,
+            height: p.size,
+            borderRadius: '50%',
+            backgroundColor: COLORS.text,
+          }}
+        />
+      ))}
+    </AbsoluteFill>
+  );
+};
+```
+
+### Noise/Grain Overlay
+
+Adds cinematic texture. Use sparingly:
+
+```tsx
+const GrainOverlay: React.FC<{ opacity?: number }> = ({ opacity = 0.03 }) => (
+  <AbsoluteFill
+    style={{
+      opacity,
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+      mixBlendMode: 'overlay',
+    }}
+  />
+);
+```
+
+### Rules
+
+- Ambient elements must use `opacity: 0.1-0.4` — never compete with content
+- Always use **deterministic** randomness (seed-based, not `Math.random()`)
+- Position particles behind all content layers (lowest z-index)
+- Keep particle count reasonable (20-50) to avoid rendering performance issues
+
+---
 
 ## Do's and Don'ts
 

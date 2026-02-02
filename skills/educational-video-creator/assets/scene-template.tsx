@@ -24,15 +24,21 @@ interface SceneProps {
   subtitle?: string;
 }
 
-// Design tokens - customize per video
+// Design tokens - import from constants.ts in real projects
+// Structure matches constants-template.ts and color-palettes.ts
 const COLORS = {
-  background: '#1a1a2e',
-  backgroundGradientEnd: '#16213e',
-  primary: '#4facfe',
-  secondary: '#fa709a',
+  background: {
+    dark: '#1a1a2e',
+    medium: '#16213e',
+    light: '#0f3460',
+  },
+  accent: {
+    rose: '#e94560',
+    yellow: '#f9ed69',
+    teal: '#00b8a9',
+  },
   text: '#ffffff',
   textMuted: '#b0b0b0',
-  accent: '#e94560',
 };
 
 const TYPOGRAPHY = {
@@ -47,7 +53,7 @@ const TYPOGRAPHY = {
     fontFamily: 'Noto Sans SC, sans-serif',
   },
   body: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 400,
     fontFamily: 'Noto Sans SC, sans-serif',
   },
@@ -184,7 +190,7 @@ const SubtitleBar: React.FC<{
     <div
       style={{
         position: 'absolute',
-        bottom: 60,
+        bottom: 40,
         left: 0,
         right: 0,
         display: 'flex',
@@ -241,7 +247,7 @@ export const SceneTemplate: React.FC<SceneProps> = ({
   return (
     <AbsoluteFill
       style={{
-        background: `linear-gradient(180deg, ${COLORS.background} 0%, ${COLORS.backgroundGradientEnd} 100%)`,
+        background: `linear-gradient(180deg, ${COLORS.background.dark} 0%, ${COLORS.background.medium} 100%)`,
       }}
     >
       {/* ========== TITLE SECTION ========== */}
@@ -268,18 +274,18 @@ export const SceneTemplate: React.FC<SceneProps> = ({
         <div
           style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: 200,
+            left: 100,
+            right: 100,
+            bottom: 230,  // 1080 - 850 = 230, keeps content above subtitle zone
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          {/* 
+          {/*
             ADD YOUR MAIN CONTENT HERE
-            
+
             Examples:
             - Animated diagrams
             - SVG illustrations
@@ -409,7 +415,7 @@ export const ForceDiagramScene: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
-        background: `linear-gradient(180deg, ${COLORS.background} 0%, ${COLORS.backgroundGradientEnd} 100%)`,
+        background: `linear-gradient(180deg, ${COLORS.background.dark} 0%, ${COLORS.background.medium} 100%)`,
       }}
     >
       {/* Title */}

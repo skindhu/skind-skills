@@ -170,7 +170,8 @@ function scanFile(filePath: string): Issue[] {
     const leftMatch = line.match(/\bleft\s*:\s*(\d+)/);
     if (leftMatch) {
       const val = Number(leftMatch[1]);
-      if (val < 100) {
+      if (val < 100 && val > 0) {
+        // left: 0 is exempt — common pattern for AbsoluteFill / full-width elements
         issues.push({
           severity: "critical",
           file: relPath,
@@ -184,7 +185,8 @@ function scanFile(filePath: string): Issue[] {
     const topMatch = line.match(/\btop\s*:\s*(\d+)/);
     if (topMatch) {
       const val = Number(topMatch[1]);
-      if (val < 60) {
+      if (val < 60 && val > 0) {
+        // top: 0 is exempt — common pattern for AbsoluteFill / full-height elements
         issues.push({
           severity: "critical",
           file: relPath,
@@ -198,13 +200,9 @@ function scanFile(filePath: string): Issue[] {
     const rightMatch = line.match(/\bright\s*:\s*(\d+)/);
     if (rightMatch) {
       const val = Number(rightMatch[1]);
-      if (val < 100) {
-        // right: N means N px from right edge → actual right position = 1920 - N
-        // If right < 100, content extends to within 100px of right edge — that's okay
-        // Actually: CSS right: N means element's right edge is N px from container right
-        // So right < 100 means element is within 100px of right edge — OUTSIDE safe zone
-        // But wait: right: 50 means 50px from right → position 1870, which is > 1820
-        // So small right values are violations
+      if (val < 100 && val > 0) {
+        // right: 0 is exempt — common pattern for AbsoluteFill / full-width elements
+        // right: N (1-99) means element is within 100px of right edge — outside safe zone
         issues.push({
           severity: "critical",
           file: relPath,
@@ -216,9 +214,10 @@ function scanFile(filePath: string): Issue[] {
     }
 
     const bottomMatch = line.match(/\bbottom\s*:\s*(\d+)/);
-    if (bottomMatch) {
+    if (bottomMatch && !isSubtitleComponent) {
       const val = Number(bottomMatch[1]);
-      if (val < 60) {
+      if (val < 60 && val > 0) {
+        // bottom: 0 is exempt — common pattern for AbsoluteFill / full-height elements
         issues.push({
           severity: "critical",
           file: relPath,
@@ -325,21 +324,21 @@ function scanFile(filePath: string): Issue[] {
       const subtitleBottomMatch = line.match(/\bbottom\s*:\s*(\d+)/);
       if (subtitleBottomMatch) {
         const bottomVal = Number(subtitleBottomMatch[1]);
-        if (bottomVal < 60) {
+        if (bottomVal < 40) {
           issues.push({
             severity: "critical",
             file: relPath,
             line: lineNum,
-            message: `Subtitle bottom: ${bottomVal} (below safe zone minimum: 60)`,
-            fix: "Change to 60 (standard subtitle position)",
+            message: `Subtitle bottom: ${bottomVal} (below safe zone minimum: 40)`,
+            fix: "Change to 40 (standard subtitle position)",
           });
         } else if (bottomVal > 120) {
           issues.push({
             severity: "important",
             file: relPath,
             line: lineNum,
-            message: `Subtitle bottom: ${bottomVal} (too high, may overlap with content. Standard range: 60-120)`,
-            fix: "Change to 60 (standard subtitle position)",
+            message: `Subtitle bottom: ${bottomVal} (too high, may overlap with content. Standard range: 40-120)`,
+            fix: "Change to 40 (standard subtitle position)",
           });
         }
       }

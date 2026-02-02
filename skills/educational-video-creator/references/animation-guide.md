@@ -17,6 +17,13 @@ Comprehensive guide for creating smooth, purposeful animations in Remotion.
   - [Attention Animations](#attention-animations)
   - [Staggered Animations](#staggered-animations)
 - [Scene Transitions](#scene-transitions)
+- [Advanced Techniques](#advanced-techniques)
+  - [SVG Draw-On Animation](#svg-draw-on-animation)
+  - [Virtual Camera](#virtual-camera)
+  - [Number Counter](#number-counter)
+  - [Per-Character Text Animation](#per-character-text-animation)
+  - [Parallax Depth Layers](#parallax-depth-layers)
+  - [Looping Animations](#looping-animations)
 - [Animation Composition](#animation-composition)
 - [Performance Tips](#performance-tips)
 - [Animation Checklist](#animation-checklist)
@@ -99,6 +106,8 @@ const progress = spring({
 ```
 
 ### Spring Presets
+
+> **Canonical source**: The presets below are the single source of truth. When defining `SPRING_PRESETS` in your project's `constants.ts` or scene files, copy values from here. Do not invent new values — consistency across scenes matters more than per-scene tuning.
 
 ```tsx
 // Recommended configurations for different purposes
@@ -501,6 +510,493 @@ const HookScene: React.FC = () => (
   </AbsoluteFill>
 );
 ```
+
+## Advanced Techniques
+
+### SVG Draw-On Animation
+
+Progressively draw SVG paths — signature technique of 3Blue1Brown and Kurzgesagt for revealing diagrams, flowcharts, and formulas.
+
+**Core Concept**: Animate `strokeDashoffset` from the path's total length to 0.
+
+```tsx
+const SVGDrawOn: React.FC<{
+  d: string;
+  pathLength: number;  // Measure with path.getTotalLength() or estimate
+  startFrame?: number;
+  duration?: number;
+  color?: string;
+  strokeWidth?: number;
+}> = ({ d, pathLength, startFrame = 0, duration = 60, color, strokeWidth = 4 }) => {
+  const frame = useCurrentFrame();
+
+  const drawProgress = interpolate(
+    frame - startFrame,
+    [0, duration],
+    [0, 1],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+  );
+
+  return (
+    <path
+      d={d}
+      stroke={color ?? COLORS.accent.primary}
+      strokeWidth={strokeWidth}
+      fill="none"
+      strokeLinecap="round"
+      strokeDasharray={pathLength}
+      strokeDashoffset={pathLength * (1 - drawProgress)}
+    />
+  );
+};
+```
+
+**Multi-path staggered drawing** (e.g., flowchart with arrows):
+
+```tsx
+const paths = [
+  { d: 'M50,50 L200,50', length: 150 },
+  { d: 'M200,50 L200,150', length: 100 },
+  { d: 'M200,150 L350,150', length: 150 },
+];
+const staggerDelay = 30;
+
+<svg viewBox="0 0 400 200">
+  {paths.map((p, i) => (
+    <SVGDrawOn
+      key={i}
+      d={p.d}
+      pathLength={p.length}
+      startFrame={i * staggerDelay}
+      duration={40}
+    />
+  ))}
+</svg>
+```
+
+**Draw + Fill**: Draw the outline first, then fill with color:
+
+```tsx
+const drawDone = interpolate(frame - startFrame, [0, drawDuration], [0, 1], {
+  extrapolateRight: 'clamp',
+});
+const fillOpacity = interpolate(
+  frame - startFrame - drawDuration,
+  [0, 20],
+  [0, 1],
+  { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+);
+
+<path
+  d={d}
+  stroke={COLORS.accent.primary}
+  strokeWidth={4}
+  fill={COLORS.accent.primary}
+  fillOpacity={fillOpacity}
+  strokeDasharray={pathLength}
+  strokeDashoffset={pathLength * (1 - drawDone)}
+/>
+```
+
+---
+
+### Virtual Camera
+
+Simulate camera movement (pan, zoom, dolly) by transforming a container that holds the entire scene. Guides viewer attention across complex compositions.
+
+**Zoom to Detail**
+
+```tsx
+const VirtualCamera: React.FC<{
+  children: React.ReactNode;
+  startFrame?: number;
+  duration?: number;
+  fromScale?: number;
+  toScale?: number;
+  fromX?: number;
+  toX?: number;
+  fromY?: number;
+  toY?: number;
+}> = ({
+  children,
+  startFrame = 0,
+  duration = 45,
+  fromScale = 1,
+  toScale = 2.5,
+  fromX = 0,
+  toX = -300,
+  fromY = 0,
+  toY = -150,
+}) => {
+  const frame = useCurrentFrame();
+
+  const progress = interpolate(frame - startFrame, [0, duration], [0, 1], {
+    easing: Easing.inOut(Easing.cubic),
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const scale = interpolate(progress, [0, 1], [fromScale, toScale]);
+  const x = interpolate(progress, [0, 1], [fromX, toX]);
+  const y = interpolate(progress, [0, 1], [fromY, toY]);
+
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        transform: `scale(${scale}) translate(${x}px, ${y}px)`,
+        transformOrigin: 'center center',
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+```
+
+**Pan across a wide scene** (e.g., timeline, landscape):
+
+```tsx
+// Slow horizontal pan over a scene wider than 1920px
+const panX = interpolate(frame, [0, durationInFrames], [0, -800], {
+  extrapolateRight: 'clamp',
+});
+
+<div style={{ transform: `translateX(${panX}px)` }}>
+  <WideScene /> {/* e.g., 2720px wide */}
+</div>
+```
+
+**Camera shake** (for impact/emphasis):
+
+```tsx
+const shakeIntensity = interpolate(frame - impactFrame, [0, 5, 15], [0, 8, 0], {
+  extrapolateLeft: 'clamp',
+  extrapolateRight: 'clamp',
+});
+const shakeX = Math.sin(frame * 5) * shakeIntensity;
+const shakeY = Math.cos(frame * 7) * shakeIntensity;
+
+<div style={{ transform: `translate(${shakeX}px, ${shakeY}px)` }}>
+  {children}
+</div>
+```
+
+---
+
+### Number Counter
+
+Animate numbers from 0 to a target value — essential for data-driven educational content (statistics, measurements, comparisons).
+
+```tsx
+const NumberCounter: React.FC<{
+  target: number;
+  startFrame?: number;
+  duration?: number;
+  decimals?: number;
+  prefix?: string;
+  suffix?: string;
+}> = ({ target, startFrame = 0, duration = 60, decimals = 0, prefix = '', suffix = '' }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const progress = spring({
+    frame: frame - startFrame,
+    fps,
+    config: { damping: 200 },
+  });
+
+  const value = interpolate(progress, [0, 1], [0, target]);
+  const display = decimals > 0
+    ? value.toFixed(decimals)
+    : Math.round(value).toLocaleString();
+
+  return (
+    <span style={TYPOGRAPHY.number}>
+      {prefix}{display}{suffix}
+    </span>
+  );
+};
+
+// Usage:
+<NumberCounter target={1000000} suffix="+" startFrame={30} />
+// Shows: 0 → ... → 1,000,000+
+```
+
+**Multiple counters with stagger** (comparison stats):
+
+```tsx
+const stats = [
+  { label: '全球用户', target: 2500000, suffix: '+' },
+  { label: '每日请求', target: 180000000, suffix: '' },
+  { label: '准确率', target: 99.7, suffix: '%', decimals: 1 },
+];
+
+{stats.map((stat, i) => (
+  <div key={i}>
+    <span style={TYPOGRAPHY.caption}>{stat.label}</span>
+    <NumberCounter
+      target={stat.target}
+      suffix={stat.suffix}
+      decimals={stat.decimals ?? 0}
+      startFrame={i * 20}
+    />
+  </div>
+))}
+```
+
+---
+
+### Per-Character Text Animation
+
+Reveal text character by character or word by word — more expressive than block fade-in for titles and key concepts.
+
+**Character-by-character reveal**:
+
+```tsx
+const AnimatedText: React.FC<{
+  text: string;
+  startFrame?: number;
+  charDelay?: number;  // frames between each character
+}> = ({ text, startFrame = 0, charDelay = 2 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  return (
+    <span>
+      {text.split('').map((char, i) => {
+        const charStart = startFrame + i * charDelay;
+        const progress = spring({
+          frame: frame - charStart,
+          fps,
+          config: { damping: 20, stiffness: 200 },
+        });
+
+        return (
+          <span
+            key={i}
+            style={{
+              display: 'inline-block',
+              opacity: progress,
+              transform: `translateY(${interpolate(progress, [0, 1], [20, 0])}px)`,
+            }}
+          >
+            {char === ' ' ? '\u00A0' : char}
+          </span>
+        );
+      })}
+    </span>
+  );
+};
+```
+
+**Word-by-word reveal** (better for longer text):
+
+```tsx
+const WordByWord: React.FC<{
+  text: string;
+  startFrame?: number;
+  wordDelay?: number;
+}> = ({ text, startFrame = 0, wordDelay = 5 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const words = text.split(' ');
+
+  return (
+    <span>
+      {words.map((word, i) => {
+        const wordStart = startFrame + i * wordDelay;
+        const progress = spring({
+          frame: frame - wordStart,
+          fps,
+          config: { damping: 200 },
+        });
+
+        return (
+          <span
+            key={i}
+            style={{
+              display: 'inline-block',
+              opacity: progress,
+              marginRight: 12,
+            }}
+          >
+            {word}
+          </span>
+        );
+      })}
+    </span>
+  );
+};
+```
+
+---
+
+### Parallax Depth Layers
+
+Multiple background layers moving at different speeds create an illusion of depth. Used extensively by Kurzgesagt for space, ocean, and microscopic scenes.
+
+```tsx
+const ParallaxScene: React.FC<{
+  /** Speed factor: 0 = static, 1 = moves with frame. Larger = faster. */
+  layers: Array<{
+    content: React.ReactNode;
+    speed: number;   // 0.1 = slow (far), 0.5 = medium, 1 = fast (near)
+    zIndex: number;
+    opacity?: number;
+  }>;
+}> = ({ layers }) => {
+  const frame = useCurrentFrame();
+
+  return (
+    <AbsoluteFill>
+      {layers.map((layer, i) => (
+        <AbsoluteFill
+          key={i}
+          style={{
+            transform: `translateX(${-frame * layer.speed}px)`,
+            zIndex: layer.zIndex,
+            opacity: layer.opacity ?? 1,
+          }}
+        >
+          {layer.content}
+        </AbsoluteFill>
+      ))}
+    </AbsoluteFill>
+  );
+};
+
+// Usage: Space scene with star parallax
+<ParallaxScene
+  layers={[
+    { content: <DistantStars />, speed: 0.05, zIndex: 0, opacity: 0.4 },
+    { content: <Nebula />, speed: 0.15, zIndex: 1, opacity: 0.6 },
+    { content: <NearStars />, speed: 0.4, zIndex: 2 },
+    { content: <MainContent />, speed: 0, zIndex: 3 },  // Static foreground
+  ]}
+/>
+```
+
+**Vertical parallax** (for underwater or atmospheric scenes):
+
+```tsx
+const verticalOffset = -frame * speed;
+<div style={{ transform: `translateY(${verticalOffset}px)` }}>
+  {children}
+</div>
+```
+
+---
+
+### Looping Animations
+
+Continuous motion for ongoing processes — engine cycles, planetary orbits, wave propagation, heartbeats.
+
+**Continuous rotation**:
+
+```tsx
+const Rotating: React.FC<{
+  children: React.ReactNode;
+  speed?: number;  // rotations per second
+}> = ({ children, speed = 0.5 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const rotation = (frame / fps) * 360 * speed;
+
+  return (
+    <div style={{ transform: `rotate(${rotation}deg)` }}>
+      {children}
+    </div>
+  );
+};
+```
+
+**Sine wave oscillation** (floating, bobbing, breathing):
+
+```tsx
+const Floating: React.FC<{
+  children: React.ReactNode;
+  amplitude?: number;  // pixels
+  frequency?: number;  // cycles per second
+}> = ({ children, amplitude = 10, frequency = 0.5 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const y = Math.sin((frame / fps) * Math.PI * 2 * frequency) * amplitude;
+
+  return (
+    <div style={{ transform: `translateY(${y}px)` }}>
+      {children}
+    </div>
+  );
+};
+```
+
+**Looping path animation** (e.g., orbit):
+
+```tsx
+const Orbiting: React.FC<{
+  children: React.ReactNode;
+  radiusX?: number;
+  radiusY?: number;
+  speed?: number;  // orbits per second
+}> = ({ children, radiusX = 150, radiusY = 80, speed = 0.3 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const angle = (frame / fps) * Math.PI * 2 * speed;
+  const x = Math.cos(angle) * radiusX;
+  const y = Math.sin(angle) * radiusY;
+
+  return (
+    <div
+      style={{
+        transform: `translate(${x}px, ${y}px)`,
+        position: 'absolute',
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+```
+
+**Wave propagation** (for physics/water scenes):
+
+```tsx
+// Generate wave points
+const WaveLine: React.FC<{
+  width: number;
+  amplitude?: number;
+  wavelength?: number;
+  speed?: number;
+}> = ({ width, amplitude = 20, wavelength = 100, speed = 2 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const points = Array.from({ length: Math.ceil(width / 4) + 1 }, (_, i) => {
+    const x = i * 4;
+    const phase = (frame / fps) * Math.PI * 2 * speed;
+    const y = Math.sin((x / wavelength) * Math.PI * 2 + phase) * amplitude;
+    return `${x},${50 + y}`;
+  });
+
+  return (
+    <svg width={width} height={100}>
+      <polyline
+        points={points.join(' ')}
+        fill="none"
+        stroke={COLORS.accent.primary}
+        strokeWidth={4}
+      />
+    </svg>
+  );
+};
+```
+
+---
 
 ## Animation Composition
 

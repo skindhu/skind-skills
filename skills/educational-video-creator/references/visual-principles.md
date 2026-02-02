@@ -19,6 +19,7 @@ Information visualization, composition, and layout principles for educational vi
   - [Text on Screen](#text-on-screen)
 - [Layout Patterns](#layout-patterns)
 - [Color in Information Design](#color-in-information-design)
+- [Callout & Annotation System](#callout--annotation-system)
 - [Visual Consistency Checklist](#visual-consistency-checklist)
 
 ---
@@ -447,6 +448,187 @@ Don't rely solely on color:
 - Add patterns, labels, or icons
 - Use different shapes for different meanings
 ```
+
+## Callout & Annotation System
+
+Educational videos frequently need to highlight, label, and annotate elements on screen. These patterns cover the most common callout needs.
+
+### Zoom Circle (Magnification Callout)
+
+Draws attention to a specific area with an animated circular highlight:
+
+```tsx
+const ZoomCircle: React.FC<{
+  cx: number;  // center X
+  cy: number;  // center Y
+  radius?: number;
+  startFrame?: number;
+  color?: string;
+}> = ({ cx, cy, radius = 60, startFrame = 0, color }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const progress = spring({
+    frame: frame - startFrame,
+    fps,
+    config: { damping: 12 },
+  });
+
+  const scale = interpolate(progress, [0, 1], [0, 1]);
+  const ringOpacity = interpolate(progress, [0, 1], [0, 0.8]);
+
+  return (
+    <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+      {/* Dim everything outside the circle */}
+      <defs>
+        <mask id="callout-mask">
+          <rect width="100%" height="100%" fill="white" />
+          <circle cx={cx} cy={cy} r={radius * scale} fill="black" />
+        </mask>
+      </defs>
+      <rect width="100%" height="100%" fill="rgba(0,0,0,0.5)" mask="url(#callout-mask)" opacity={ringOpacity} />
+      {/* Highlight ring */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={radius * scale}
+        fill="none"
+        stroke={color ?? COLORS.accent.primary}
+        strokeWidth={4}
+        opacity={ringOpacity}
+      />
+    </svg>
+  );
+};
+```
+
+### Leader Line + Label
+
+Connects an element to its label with an animated line:
+
+```tsx
+const LeaderLabel: React.FC<{
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  label: string;
+  startFrame?: number;
+  color?: string;
+}> = ({ fromX, fromY, toX, toY, label, startFrame = 0, color }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const lineProgress = interpolate(frame - startFrame, [0, 20], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  const labelProgress = spring({
+    frame: frame - startFrame - 15,
+    fps,
+    config: { damping: 200 },
+  });
+
+  const currentX = interpolate(lineProgress, [0, 1], [fromX, toX]);
+  const currentY = interpolate(lineProgress, [0, 1], [fromY, toY]);
+
+  return (
+    <>
+      <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+        {/* Dot at source */}
+        <circle cx={fromX} cy={fromY} r={4} fill={color ?? COLORS.accent.primary} opacity={lineProgress} />
+        {/* Leader line */}
+        <line
+          x1={fromX} y1={fromY}
+          x2={currentX} y2={currentY}
+          stroke={color ?? COLORS.accent.primary}
+          strokeWidth={2}
+          strokeDasharray="6 4"
+        />
+      </svg>
+      {/* Label at end */}
+      <div
+        style={{
+          position: 'absolute',
+          left: toX,
+          top: toY - 16,
+          opacity: labelProgress,
+          transform: `translateY(${interpolate(labelProgress, [0, 1], [10, 0])}px)`,
+        }}
+      >
+        <span style={{ ...TYPOGRAPHY.caption, color: color ?? COLORS.accent.primary }}>
+          {label}
+        </span>
+      </div>
+    </>
+  );
+};
+```
+
+### Region Highlight
+
+Semi-transparent rectangle overlay with label — for highlighting areas or code blocks:
+
+```tsx
+const RegionHighlight: React.FC<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label?: string;
+  startFrame?: number;
+  color?: string;
+}> = ({ x, y, width, height, label, startFrame = 0, color }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const progress = spring({
+    frame: frame - startFrame,
+    fps,
+    config: { damping: 200 },
+  });
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: x,
+        top: y,
+        width,
+        height,
+        backgroundColor: `${color ?? COLORS.accent.primary}22`,
+        border: `2px solid ${color ?? COLORS.accent.primary}`,
+        borderRadius: 4,
+        opacity: progress,
+      }}
+    >
+      {label && (
+        <span
+          style={{
+            position: 'absolute',
+            top: -28,
+            left: 0,
+            ...TYPOGRAPHY.caption,
+            color: color ?? COLORS.accent.primary,
+          }}
+        >
+          {label}
+        </span>
+      )}
+    </div>
+  );
+};
+```
+
+### When to Use Each
+
+| Callout Type | Use For |
+|-------------|---------|
+| Zoom Circle | Drawing attention to a specific small area |
+| Leader Line + Label | Labeling parts of a diagram or illustration |
+| Region Highlight | Highlighting a block of text, code, or area |
+
+---
 
 ## Visual Consistency Checklist
 

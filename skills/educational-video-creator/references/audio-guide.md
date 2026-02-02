@@ -80,7 +80,7 @@ npx tsx <skill-scripts-path>/generate-tts.ts <CompositionName>
 脚本会自动：
 1. **提取字幕文本** — 优先从 `constants.ts` 的 `NARRATION` 对象提取，备选从 TSX 的 `SubtitleSequence segments` 中正则提取
 2. **文本预处理** — 移除停顿/强调标记、数字转中文、英文缩写加连字符、移除特殊符号
-3. **批量 TTS 生成** — 并发调用 edge-tts（≤5 并发），输出到 `public/audio/narration/<sceneKey>-seg<NN>.mp3`
+3. **批量 TTS 生成** — 逐段调用 edge-tts（顺序执行），输出到 `public/audio/narration/<sceneKey>-seg<NN>.mp3`
 
 **文本提取优先级:**
 1. `constants.ts` 中有 `NARRATION` 对象 → 自动按中文标点分段（≤25 字/段）

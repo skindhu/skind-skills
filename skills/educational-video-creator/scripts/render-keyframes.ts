@@ -91,7 +91,7 @@ function getKeyframes(
         },
         {
           scene: name,
-          frame: scene.start + scene.duration - 30,
+          frame: Math.max(scene.start, scene.start + scene.duration - 30),
         },
       );
     } else {

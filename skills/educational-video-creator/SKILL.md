@@ -32,7 +32,7 @@ cd remotion_video
 
 # Initialize without interactive prompts
 npm init -y
-npm install remotion @remotion/cli @remotion/google-fonts react react-dom
+npm install remotion @remotion/cli @remotion/google-fonts @remotion/transitions react react-dom
 npm install -D typescript @types/react
 
 # Create minimal project structure
@@ -85,6 +85,17 @@ your-workspace/
 6. Implement animations → code scenes in Remotion
 7. Quality assurance → auto-check, auto-fix, auto-start preview
 
+## Progress Tracking
+
+Throughout execution, maintain a progress file at `remotion_video/PROGRESS.md`:
+
+1. **Create** the file at the start of Phase 1 using the template from [progress-template.md](assets/progress-template.md)
+2. **Update** after completing each checkbox item — mark `[ ]` → `[x]` and add notes
+3. **Read** this file at the start of each new conversation turn or after context compaction to restore execution state
+4. **Log decisions** in the Decisions table so they survive context loss
+
+This file is critical for maintaining continuity in long conversations. Always check PROGRESS.md before starting work to avoid repeating completed steps.
+
 ## Workflow
 
 ### Phase 1: Requirements Gathering
@@ -103,12 +114,24 @@ For detailed question templates, see [requirements-guide.md](references/requirem
 
 Write a complete narrative script before designing the storyboard. This phase focuses purely on **storytelling** — what to say and how to say it well — without worrying about visual specs, frame numbers, or animation parameters.
 
-The script should include:
+**IMPORTANT**: Write the FULL narration text — every word that will be spoken. Do NOT write summaries, bullet points, or placeholders. The script is the final spoken content.
+
+The script must include:
 
 1. **Core message** — one-line summary, learning objectives
-2. **Narrative strategy** — entry angle, core metaphor, emotional arc, knowledge building order
-3. **Full narration text** — complete script for every chapter, with visual intents (brief descriptions, not specs)
+2. **Narrative strategy** — apply techniques from script-template.md:
+   - Entry angle (question / scenario / challenge / story)
+   - Core metaphor that runs through the entire video
+   - Knowledge scaffolding order (what depends on what)
+   - Emotional curve (curiosity → understanding → wonder → satisfaction)
+3. **Full narration text** — complete word-for-word script for every chapter:
+   - Include emphasis markers (**bold** for stress, *italic* for softer tone)
+   - Mark pauses with `[.]` (short), `[..]` (medium), `[...]` (long), `[PAUSE]` or `[BEAT]` (dramatic) — see narration-guide.md for duration semantics
+   - Add visual intents after each chapter (1-2 sentences describing what viewers should see — enough for Phase 2 to design scenes, but no animation specs)
 4. **Pacing notes** — where to speed up, slow down, and pause
+5. **Self-review** — run through the checklist in script-template.md before presenting to user
+
+Quality gate: Present the complete script to the user for approval. Do NOT proceed to Phase 2 until the user explicitly approves the narrative.
 
 Why script first:
 - Separates "what to tell" from "how to show" — two different creative activities
@@ -116,10 +139,10 @@ Why script first:
 - Pure text is cheap to iterate; storyboard with animation specs is expensive to revise
 - Users can easily review "is the story good?" without wading through technical details
 
-**Output**: Save the approved script as `remotion_video/script.md` for traceability and independent review.
+**Output**: Save the approved script as `remotion_video/script.md`
 
-See [script-template.md](references/script-template.md) for templates and writing techniques.
-See [narration-guide.md](references/narration-guide.md) for narration style and audience adaptation.
+See [script-template.md](references/script-template.md) for templates, narrative techniques, and examples.
+See [narration-guide.md](references/narration-guide.md) for audience adaptation, writing techniques, and TTS notes.
 
 ### Phase 2: Storyboard Design
 
@@ -176,10 +199,11 @@ Implement scenes using Remotion:
 - See [animation-guide.md](references/animation-guide.md) "Preventing Transparent Frames" for the implementation pattern
 
 **Color rules (critical for Phase 5 style-scan compliance):**
-- All colors **must** be referenced via the `COLORS` object from `constants.ts` (e.g., `COLORS.accent.orange`) — never write hex values directly in TSX files
+- All colors **must** be referenced via the `COLORS` object from `constants.ts` (e.g., `COLORS.accent.rose`) — never write hex values directly in TSX files
 - The only exception is `rgba()` for opacity variations (e.g., `rgba(0, 0, 0, 0.7)` for subtitle backgrounds)
 - This prevents the common issue where style-scan reports dozens of "color not in approved palette" warnings
 
+See [constants-template.ts](assets/constants-template.ts) for the complete constants.ts structure (COLORS, SCENES, NARRATION, AUDIO_SEGMENTS, font loading).
 See [svg-components.md](references/svg-components.md) for component patterns.
 See [animation-guide.md](references/animation-guide.md) for timing and easing.
 
@@ -257,3 +281,10 @@ See [video-structure.md](references/video-structure.md) for detailed templates.
 | [style-scan.ts](scripts/style-scan.ts) | 代码样式扫描脚本 (Phase 5 Step 1) |
 | [generate-tts.ts](scripts/generate-tts.ts) | 字幕提取 + TTS 音频生成脚本 (Phase 4.5 Steps 1-2) |
 | [rebuild-timeline.ts](scripts/rebuild-timeline.ts) | 音频时长测量 + 时间线重建脚本 (Phase 4.5 Steps 3-6) |
+| [constants-template.ts](assets/constants-template.ts) | constants.ts 结构模板 (Phase 4) |
+| [progress-template.md](assets/progress-template.md) | 执行进度跟踪模板 (全流程) |
+| [color-palettes.ts](assets/color-palettes.ts) | 预定义调色板参考 (Phase 3) |
+| [typography-presets.ts](assets/typography-presets.ts) | 排版预设参考 (Phase 3) |
+| [scene-template.tsx](assets/scene-template.tsx) | 场景组件模板 (Phase 4) |
+| [common-icons.tsx](assets/common-icons.tsx) | 通用 SVG 图标组件 (Phase 4) |
+| [shared.ts](scripts/shared.ts) | 脚本共享函数（内部依赖，无需直接调用） |

@@ -31,7 +31,7 @@ export const FONT_SIZES = {
   heading: 48,     // Section headings
   body: 36,        // Body text, subtitles
   caption: 24,     // Small labels, captions
-  tiny: 18,        // Disclaimers, credits
+  tiny: 24,        // Disclaimers, credits (matches absolute minimum)
   
   // Absolute minimum for readability
   minimum: 24,
@@ -113,7 +113,7 @@ export const SUBTITLE_STYLE = {
 
 export const SUBTITLE_CONTAINER_STYLE: React.CSSProperties = {
   position: 'absolute',
-  bottom: 60, // Standard subtitle position. Must be 60-120; style-scan flags values outside this range.
+  bottom: 40, // Standard subtitle position. Must be 40-120; style-scan flags values outside this range.
   left: 0,
   right: 0,
   display: 'flex',

@@ -14,8 +14,20 @@
  */
 
 import { readFileSync, mkdirSync, existsSync, globSync } from "fs";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import path from "path";
+import { splitNarrationText, deriveSceneKey } from "./shared";
+
+// ---------------------------------------------------------------------------
+// Dependency check
+// ---------------------------------------------------------------------------
+
+try {
+  execFileSync("edge-tts", ["--help"], { stdio: "pipe", timeout: 5000 });
+} catch {
+  console.error("edge-tts not found. Install: pip install edge-tts");
+  process.exit(1);
+}
 
 // ---------------------------------------------------------------------------
 // Argument parsing
@@ -69,9 +81,9 @@ const constantsContent = readFileSync(constantsPath, "utf-8");
  * Splits each narration into segments by Chinese sentence-ending punctuation.
  */
 function extractFromNarration(source: string): Segment[] | null {
-  // Match NARRATION = { ... } as const
+  // Match NARRATION = { ... } with optional type annotation and optional "as const"
   const narrationMatch = source.match(
-    /export\s+const\s+NARRATION\s*=\s*\{([\s\S]*?)\}\s*as\s+const/,
+    /export\s+const\s+NARRATION\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
   );
   if (!narrationMatch) return null;
 
@@ -97,41 +109,6 @@ function extractFromNarration(source: string): Segment[] | null {
   }
 
   return segments.length > 0 ? segments : null;
-}
-
-/**
- * Split narration text into subtitle-sized segments (5-20 chars ideally).
- * Splits on Chinese punctuation boundaries.
- */
-function splitNarrationText(text: string): string[] {
-  // Split on sentence-ending punctuation: 。！？；
-  const sentences = text.split(/(?<=[。！？；])/);
-  const result: string[] = [];
-
-  for (const sentence of sentences) {
-    const trimmed = sentence.trim();
-    if (!trimmed) continue;
-
-    // If sentence is short enough, keep as-is
-    if (trimmed.length <= 25) {
-      result.push(trimmed);
-    } else {
-      // Further split on comma/pause: ，、
-      const clauses = trimmed.split(/(?<=[，、])/);
-      let buffer = "";
-      for (const clause of clauses) {
-        if (buffer.length + clause.length <= 25) {
-          buffer += clause;
-        } else {
-          if (buffer) result.push(buffer.trim());
-          buffer = clause;
-        }
-      }
-      if (buffer.trim()) result.push(buffer.trim());
-    }
-  }
-
-  return result;
 }
 
 /**
@@ -167,25 +144,6 @@ function extractFromTSX(): Segment[] | null {
   return segments.length > 0 ? segments : null;
 }
 
-/**
- * Derive a scene key from a filename.
- * Examples:
- *   Scene01Hook.tsx -> hook
- *   Scene02Introduction.tsx -> introduction
- *   HookScene.tsx -> hook
- */
-function deriveSceneKey(basename: string): string {
-  // Remove "Scene" prefix with optional number
-  let key = basename.replace(/^Scene\d*/, "");
-  // Remove "Scene" suffix
-  key = key.replace(/Scene$/, "");
-  // Convert to camelCase lowercase first letter
-  if (key.length > 0) {
-    key = key[0].toLowerCase() + key.slice(1);
-  }
-  return key || basename.toLowerCase();
-}
-
 // Try extraction strategies in priority order
 let extractedSegments = extractFromNarration(constantsContent);
 let source = "NARRATION object in constants.ts";
@@ -213,21 +171,35 @@ console.log(`Extracted ${segments.length} segments\n`);
 // 2. Text preprocessing
 // ---------------------------------------------------------------------------
 
-const NUMBER_MAP: Record<string, string> = {
-  "0": "零",
-  "1": "一",
-  "2": "二",
-  "3": "三",
-  "4": "四",
-  "5": "五",
-  "6": "六",
-  "7": "七",
-  "8": "八",
-  "9": "九",
-  "10": "十",
-  "100": "一百",
-  "1000": "一千",
-};
+const DIGIT_MAP = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+
+function numberToChinese(num: number): string {
+  if (num < 0) return "负" + numberToChinese(-num);
+  if (num <= 9) return DIGIT_MAP[num];
+  if (num === 10) return "十";
+  if (num < 20) return "十" + (num % 10 === 0 ? "" : DIGIT_MAP[num % 10]);
+  if (num < 100) {
+    const tens = Math.floor(num / 10);
+    const ones = num % 10;
+    return DIGIT_MAP[tens] + "十" + (ones === 0 ? "" : DIGIT_MAP[ones]);
+  }
+  if (num < 1000) {
+    const hundreds = Math.floor(num / 100);
+    const remainder = num % 100;
+    if (remainder === 0) return DIGIT_MAP[hundreds] + "百";
+    if (remainder < 10) return DIGIT_MAP[hundreds] + "百零" + DIGIT_MAP[remainder];
+    return DIGIT_MAP[hundreds] + "百" + numberToChinese(remainder);
+  }
+  if (num < 10000) {
+    const thousands = Math.floor(num / 1000);
+    const remainder = num % 1000;
+    if (remainder === 0) return DIGIT_MAP[thousands] + "千";
+    if (remainder < 100) return DIGIT_MAP[thousands] + "千零" + numberToChinese(remainder);
+    return DIGIT_MAP[thousands] + "千" + numberToChinese(remainder);
+  }
+  // For numbers >= 10000, fall back to digit-by-digit
+  return String(num).split("").map((d) => DIGIT_MAP[Number(d)] || d).join("");
+}
 
 function preprocessText(text: string): string {
   let result = text;
@@ -241,15 +213,10 @@ function preprocessText(text: string): string {
   result = result.replace(/\*\*([^*]+)\*\*/g, "$1");
   result = result.replace(/\*([^*]+)\*/g, "$1");
 
-  // Convert standalone digits to Chinese (basic mapping)
-  // Handle patterns like "100万" -> "一百万", "3个" -> "三个"
+  // Convert standalone digits to Chinese
+  // Handle patterns like "100万" -> "一百万", "3个" -> "三个", "42种" -> "四十二种"
   result = result.replace(/(\d+)(万|亿|千|百|十|个|种|次|年|月|天|秒|分钟|小时|米|公里|吨|度)/g, (_, num, unit) => {
-    if (NUMBER_MAP[num]) return NUMBER_MAP[num] + unit;
-    // For complex numbers, spell out digit by digit
-    return num
-      .split("")
-      .map((d: string) => NUMBER_MAP[d] || d)
-      .join("") + unit;
+    return numberToChinese(Number(num)) + unit;
   });
 
   // English abbreviations: all-caps words -> hyphenated letters
@@ -285,12 +252,14 @@ function generateTTS(segment: Segment): TTSResult {
   const outputFile = path.join(outputDir, filename);
   const processedText = preprocessText(segment.text);
 
-  // Escape double quotes and single quotes in text for shell
-  const escapedText = processedText.replace(/"/g, '\\"');
-  const cmd = `edge-tts --voice ${voice} --rate="${rate}" --text "${escapedText}" --write-media "${outputFile}"`;
-
+  // Use execFileSync (array form) to avoid shell injection
   try {
-    execSync(cmd, { stdio: "pipe", timeout: 30000 });
+    execFileSync("edge-tts", [
+      "--voice", voice,
+      "--rate", rate,
+      "--text", processedText,
+      "--write-media", outputFile,
+    ], { stdio: "pipe", timeout: 30000 });
     return { segment, filename, success: true };
   } catch (err: any) {
     const msg =

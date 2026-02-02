@@ -18,6 +18,18 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, globSync } from "fs";
 import { execSync } from "child_process";
 import path from "path";
+import { splitNarrationText, deriveSceneKey } from "./shared";
+
+// ---------------------------------------------------------------------------
+// Dependency check
+// ---------------------------------------------------------------------------
+
+try {
+  execSync("ffprobe -version", { stdio: "pipe", timeout: 5000 });
+} catch {
+  console.error("ffprobe not found. Install ffmpeg: brew install ffmpeg (macOS) or apt install ffmpeg (Linux)");
+  process.exit(1);
+}
 
 // ---------------------------------------------------------------------------
 // Argument parsing
@@ -202,7 +214,7 @@ function extractTexts(): Map<string, string[]> {
 
   // Try NARRATION object
   const narrationMatch = constantsContent.match(
-    /export\s+const\s+NARRATION\s*=\s*\{([\s\S]*?)\}\s*as\s+const/,
+    /export\s+const\s+NARRATION\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
   );
   if (narrationMatch) {
     const block = narrationMatch[1];
@@ -236,40 +248,6 @@ function extractTexts(): Map<string, string[]> {
   }
 
   return texts;
-}
-
-function splitNarrationText(text: string): string[] {
-  const sentences = text.split(/(?<=[。！？；])/);
-  const result: string[] = [];
-  for (const sentence of sentences) {
-    const trimmed = sentence.trim();
-    if (!trimmed) continue;
-    if (trimmed.length <= 25) {
-      result.push(trimmed);
-    } else {
-      const clauses = trimmed.split(/(?<=[，、])/);
-      let buffer = "";
-      for (const clause of clauses) {
-        if (buffer.length + clause.length <= 25) {
-          buffer += clause;
-        } else {
-          if (buffer) result.push(buffer.trim());
-          buffer = clause;
-        }
-      }
-      if (buffer.trim()) result.push(buffer.trim());
-    }
-  }
-  return result;
-}
-
-function deriveSceneKey(basename: string): string {
-  let key = basename.replace(/^Scene\d*/, "");
-  key = key.replace(/Scene$/, "");
-  if (key.length > 0) {
-    key = key[0].toLowerCase() + key.slice(1);
-  }
-  return key || basename.toLowerCase();
 }
 
 const segmentTexts = extractTexts();
@@ -441,7 +419,7 @@ if (writeMode) {
 
   // Remove existing AUDIO_SEGMENTS if present
   updated = updated.replace(
-    /\n*export\s+const\s+AUDIO_SEGMENTS\s*=\s*\{[\s\S]*?\}\s*as\s+const\s*;\n*/,
+    /\n*export\s+const\s+AUDIO_SEGMENTS\s*=\s*\{[\s\S]*?\n\}\s*as\s+const\s*;\n*/,
     "\n",
   );
 

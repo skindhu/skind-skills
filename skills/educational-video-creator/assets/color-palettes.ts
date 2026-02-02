@@ -19,7 +19,7 @@ export const DEFAULT_COLORS = {
   
   // Accent Colors
   accent: {
-    orange: '#e94560',    // Warm accent - important elements
+    rose: '#e94560',      // Warm accent - important elements
     yellow: '#f9ed69',    // Bright accent - highlights
     teal: '#00b8a9',      // Cool accent - secondary info
   },
