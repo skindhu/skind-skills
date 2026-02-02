@@ -117,7 +117,7 @@ const { fontFamily: inter } = loadInter();
 --title-size: 96px;       /* Main titles (minimum: 72px) */
 --heading-size: 64px;     /* Section headings (minimum: 48px) */
 --body-size: 48px;        /* Body text, labels (minimum: 40px) */
---subtitle-size: 44px;    /* Subtitles (minimum: 40px) */
+--subtitle-size: 36px;    /* Subtitles - smaller for readability */
 --caption-size: 36px;     /* Small labels, captions (absolute minimum) */
 ```
 
@@ -136,11 +136,11 @@ const titleStyle = {
 
 // Subtitle style
 const subtitleStyle = {
-  fontSize: 44,
+  fontSize: 36,
   fontWeight: 400,
   color: '#f0f0f0',
   backgroundColor: 'rgba(0,0,0,0.6)',
-  padding: '12px 24px',
+  padding: '10px 20px',
   borderRadius: 8,
 };
 ```

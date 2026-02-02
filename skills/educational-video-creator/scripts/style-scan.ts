@@ -130,13 +130,13 @@ function scanFile(filePath: string): Issue[] {
     const fontSizeMatch = line.match(/fontSize\s*:\s*(\d+)/);
     if (fontSizeMatch) {
       const size = Number(fontSizeMatch[1]);
-      if (size < 36) {
+      if (size < 32) {
         issues.push({
           severity: "critical",
           file: relPath,
           line: lineNum,
-          message: `fontSize: ${size} (minimum: 36)`,
-          fix: "Change to 36 or larger",
+          message: `fontSize: ${size} (minimum: 32)`,
+          fix: "Change to 32 or larger",
         });
       }
     }
