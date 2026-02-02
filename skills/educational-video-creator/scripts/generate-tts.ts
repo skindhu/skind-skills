@@ -255,10 +255,10 @@ function generateTTS(segment: Segment): TTSResult {
   // Use execFileSync (array form) to avoid shell injection
   try {
     execFileSync("edge-tts", [
-      "--voice", voice,
-      "--rate", rate,
-      "--text", processedText,
-      "--write-media", outputFile,
+      `--voice=${voice}`,
+      `--rate=${rate}`,
+      `--text=${processedText}`,
+      `--write-media=${outputFile}`,
     ], { stdio: "pipe", timeout: 30000 });
     return { segment, filename, success: true };
   } catch (err: any) {
