@@ -200,6 +200,7 @@ Implement scenes using Remotion:
 - All narration text **must** be stored in the `NARRATION` object in `constants.ts` — never hardcode text directly in scene TSX files
 - Create an estimated `AUDIO_SEGMENTS` in `constants.ts` with approximate timing. Phase 4.5 will overwrite it with real audio-based timing
 - Subtitle components **must** reference `AUDIO_SEGMENTS.sceneKey` — never use inline segment arrays with hardcoded frame numbers
+- `AUDIO_SEGMENTS` 中的 `startFrame`/`endFrame` **必须使用场景本地帧号**（每个场景从 `SCENE_PAD`=15 开始），**不是全局帧号**。因为 AudioLayer 和 SubtitleSequence 都在场景的 `<Sequence>` 内部运行，`useCurrentFrame()` 返回的是本地帧号。如果使用全局帧号，后续场景的字幕会延迟或完全不显示
 - This ensures `rebuild-timeline.ts --write` in Phase 4.5 can update timing without modifying any scene files
 
 **Background rules (prevents transparent/checkerboard frames during transitions):**

@@ -81,6 +81,15 @@ export const NARRATION = {
 // ---------------------------------------------------------------------------
 // Phase 4: Use estimated timing below. Phase 4.5: rebuild-timeline.ts --write
 // will overwrite this entire block with real durations from TTS audio files.
+//
+// ⚠️ IMPORTANT: startFrame / endFrame are SCENE-LOCAL frame numbers (NOT global).
+// Each scene's segments start from SCENE_PAD (default 15), because:
+//   - AudioLayer wraps each scene in <Sequence from={scene.start}>, so inner
+//     <Sequence from={seg.startFrame}> treats startFrame as relative to scene start.
+//   - Scene components inside TransitionSeries.Sequence get local frames from
+//     useCurrentFrame() (resets to 0 at scene start).
+// If you use global frame numbers here, subtitles in later scenes will be
+// delayed or invisible (startFrame exceeds scene duration).
 
 export const AUDIO_SEGMENTS = {
   hook: [
@@ -101,23 +110,23 @@ export const AUDIO_SEGMENTS = {
     {
       text: "秘密要从阳光说起",
       file: "concept-seg00.mp3",
-      startFrame: 165,
-      endFrame: 210,
+      startFrame: 15,
+      endFrame: 60,
     },
-    // ... more segments
+    // ... more segments (each scene's frames restart from SCENE_PAD)
   ],
   summary: [
     {
       text: "所以我们看到的蓝天",
       file: "summary-seg00.mp3",
-      startFrame: 465,
-      endFrame: 510,
+      startFrame: 15,
+      endFrame: 60,
     },
     {
       text: "就是散射的蓝色光",
       file: "summary-seg01.mp3",
-      startFrame: 515,
-      endFrame: 555,
+      startFrame: 65,
+      endFrame: 105,
     },
   ],
 } as const;
