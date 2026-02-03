@@ -4,6 +4,12 @@
 
 skindhu 分享的 Claude Code 技能集，提升日常工作和学习效率。
 
+## 关注作者
+
+若希望了解更多AI探索相关的内容，可关注作者公众号：
+
+<img src="https://wechat-account-1251781786.cos.ap-guangzhou.myqcloud.com/wechat_account.jpeg" width="30%">
+
 ## 前置要求
 
 - Python 3.11+ 环境

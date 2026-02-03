@@ -4,6 +4,12 @@
 
 Claude Code skills shared by skindhu for improving daily work and learning efficiency.
 
+## Follow the Author
+
+For more AI exploration content, follow the author's WeChat Official Account:
+
+<img src="https://wechat-account-1251781786.cos.ap-guangzhou.myqcloud.com/wechat_account.jpeg" width="30%">
+
 ## Prerequisites
 
 - Python 3.11+ environment
