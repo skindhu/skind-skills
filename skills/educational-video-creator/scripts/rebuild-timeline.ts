@@ -8,11 +8,12 @@
  *   npx tsx <path>/rebuild-timeline.ts <CompositionName>
  *
  * Options:
- *   --audio-dir <dir>   Audio directory (default: public/audio/narration)
- *   --fps <number>      Frame rate (default: 30)
- *   --gap <frames>      Gap between segments in frames (default: 6)
- *   --pad <frames>      Scene start/end padding in frames (default: 15)
- *   --write             Write directly to constants.ts (default: stdout only)
+ *   --audio-dir <dir>      Audio directory (default: public/audio/narration)
+ *   --fps <number>         Frame rate (default: 30)
+ *   --gap <frames>         Gap between segments in frames (default: 6)
+ *   --pad <frames>         Scene start/end padding in frames (default: 15)
+ *   --transition <frames>  TransitionSeries overlap per transition (default: auto from TRANSITION_DURATION in constants.ts, or 0)
+ *   --write                Write directly to constants.ts (default: stdout only)
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, globSync } from "fs";
@@ -50,7 +51,7 @@ const compositionName = process.argv[2];
 
 if (!compositionName || compositionName.startsWith("--")) {
   console.error(
-    "Usage: npx tsx rebuild-timeline.ts <CompositionName> [--audio-dir <dir>] [--fps <n>] [--gap <n>] [--pad <n>] [--write]",
+    "Usage: npx tsx rebuild-timeline.ts <CompositionName> [--audio-dir <dir>] [--fps <n>] [--gap <n>] [--pad <n>] [--transition <n>] [--write]",
   );
   process.exit(1);
 }
@@ -59,6 +60,7 @@ const audioDir = getArg("--audio-dir") || "public/audio/narration";
 const FPS = Number(getArg("--fps") || "30");
 const GAP_FRAMES = Number(getArg("--gap") || "6");
 const SCENE_PAD = Number(getArg("--pad") || "15");
+const transitionArg = getArg("--transition"); // resolved after constants.ts is read
 const writeMode = hasFlag("--write");
 
 // ---------------------------------------------------------------------------
@@ -135,11 +137,19 @@ const totalFramesMatch = constantsContent.match(
 );
 const oldTotalFrames = totalFramesMatch ? Number(totalFramesMatch[1]) : 0;
 
+// Parse TRANSITION_DURATION from constants.ts (CLI --transition overrides)
+const transitionMatch = constantsContent.match(
+  /export\s+const\s+TRANSITION_DURATION\s*=\s*(\d+)/,
+);
+const TRANSITION_FRAMES = Number(
+  transitionArg ?? transitionMatch?.[1] ?? "0",
+);
+
 console.log(`Composition: ${compositionName}`);
 console.log(`Scenes: ${sceneKeys.length} (${sceneKeys.join(", ")})`);
 console.log(`Original TOTAL_FRAMES: ${oldTotalFrames}`);
 console.log(`Audio directory: ${audioDir}`);
-console.log(`FPS: ${FPS}, GAP: ${GAP_FRAMES} frames, PAD: ${SCENE_PAD} frames\n`);
+console.log(`FPS: ${FPS}, GAP: ${GAP_FRAMES} frames, PAD: ${SCENE_PAD} frames, TRANSITION: ${TRANSITION_FRAMES} frames\n`);
 
 // ---------------------------------------------------------------------------
 // 2. Scan audio files
@@ -273,7 +283,7 @@ for (const sceneKey of sceneKeys) {
       start: chainStart,
       duration: originalScenes[sceneKey].duration,
     };
-    chainStart += originalScenes[sceneKey].duration;
+    chainStart += originalScenes[sceneKey].duration - TRANSITION_FRAMES;
     console.log(
       `  ${sceneKey}: no audio files, keeping original duration ${originalScenes[sceneKey].duration}`,
     );
@@ -307,10 +317,12 @@ for (const sceneKey of sceneKeys) {
 
   newScenes[sceneKey] = { start: chainStart, duration: sceneDuration };
   audioSegments[sceneKey] = segTimings;
-  chainStart += sceneDuration;
+  chainStart += sceneDuration - TRANSITION_FRAMES;
 }
 
-const newTotalFrames = chainStart;
+// chainStart already subtracted TRANSITION_FRAMES after the last scene,
+// but there is no transition after the final scene — add it back.
+const newTotalFrames = chainStart + TRANSITION_FRAMES;
 
 // ---------------------------------------------------------------------------
 // 6. Deviation check
@@ -411,9 +423,9 @@ if (writeMode) {
       .join("\n") + ";",
   );
 
-  // Replace TOTAL_FRAMES
+  // Replace TOTAL_FRAMES (handles both single-line numbers and multi-line expressions)
   updated = updated.replace(
-    /export\s+const\s+TOTAL_FRAMES\s*=\s*\d+[^;]*;/,
+    /export\s+const\s+TOTAL_FRAMES\s*=[\s\S]*?;/,
     `export const TOTAL_FRAMES = ${newTotalFrames}; // ${(newTotalFrames / FPS / 60).toFixed(1)} minutes`,
   );
 

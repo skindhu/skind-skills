@@ -59,6 +59,8 @@ export const SCENES = {
   summary: { start: 450, duration: 120 },
 } as const;
 
+export const TRANSITION_DURATION = 20;
+
 export const TOTAL_FRAMES = 570;
 
 // ---------------------------------------------------------------------------

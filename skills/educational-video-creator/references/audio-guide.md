@@ -99,6 +99,7 @@ npx tsx <skill-scripts-path>/rebuild-timeline.ts <CompositionName>
 #   --fps <number>      帧率 (默认 30)
 #   --gap <frames>      段间间隔帧数 (默认 6)
 #   --pad <frames>      场景首尾填充帧数 (默认 15)
+#   --transition <frames> 过渡重叠帧数 (默认自动从 constants.ts 的 TRANSITION_DURATION 读取，未定义则为 0)
 #   --write             直接写入 constants.ts (默认只输出到 stdout)
 ```
 
@@ -113,7 +114,7 @@ npx tsx <skill-scripts-path>/rebuild-timeline.ts <CompositionName>
 **时间线算法:**
 
 ```
-FPS = 30, GAP_FRAMES = 6, SCENE_PAD = 15
+FPS = 30, GAP_FRAMES = 6, SCENE_PAD = 15, TRANSITION_FRAMES = 20
 
 For each scene (按 SCENES key 顺序):
   current_frame = SCENE_PAD
@@ -123,12 +124,15 @@ For each scene (按 SCENES key 顺序):
     current_frame = endFrame + GAP_FRAMES
   scene.duration = current_frame + SCENE_PAD
 
-Chain scenes:
+Chain scenes (考虑 TransitionSeries 过渡重叠):
   scenes[0].start = 0
-  scenes[i].start = scenes[i-1].start + scenes[i-1].duration
+  scenes[i].start = scenes[i-1].start + scenes[i-1].duration - TRANSITION_FRAMES
 
-TOTAL_FRAMES = last.start + last.duration
+TOTAL_FRAMES = sum(durations) - (N-1) * TRANSITION_FRAMES
 ```
+
+> **注意**: `TRANSITION_FRAMES` 自动从 `constants.ts` 的 `TRANSITION_DURATION` 读取。
+> 如果项目不使用 `TransitionSeries`（即没有定义 `TRANSITION_DURATION`），则默认为 0，行为与之前一致。
 
 使用 `--write` 模式可直接更新 constants.ts（替换 SCENES/TOTAL_FRAMES，追加 AUDIO_SEGMENTS）。
 
