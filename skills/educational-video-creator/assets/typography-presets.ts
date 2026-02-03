@@ -113,7 +113,7 @@ export const SUBTITLE_STYLE = {
 
 export const SUBTITLE_CONTAINER_STYLE: React.CSSProperties = {
   position: 'absolute',
-  bottom: 40, // Standard subtitle position. Must be 40-120; style-scan flags values outside this range.
+  bottom: 20, // Standard subtitle position. style-scan flags values !== 20.
   left: 0,
   right: 0,
   display: 'flex',
