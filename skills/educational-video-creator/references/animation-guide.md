@@ -24,6 +24,7 @@ Comprehensive guide for creating smooth, purposeful animations in Remotion.
   - [Per-Character Text Animation](#per-character-text-animation)
   - [Parallax Depth Layers](#parallax-depth-layers)
   - [Looping Animations](#looping-animations)
+- [Narration-Synced Animation](#narration-synced-animation)
 - [Animation Composition](#animation-composition)
 - [Performance Tips](#performance-tips)
 - [Animation Checklist](#animation-checklist)
@@ -995,6 +996,70 @@ const WaveLine: React.FC<{
   );
 };
 ```
+
+---
+
+## Narration-Synced Animation
+
+### Core Principle
+
+Visual elements that illustrate narrated content **MUST** derive their timing from `AUDIO_SEGMENTS`, not from hardcoded frame numbers. This ensures animations stay aligned with narration even after Phase 4.5 rebuilds the timeline with real audio durations.
+
+### Pattern: Derive startFrame from AUDIO_SEGMENTS
+
+```tsx
+import { AUDIO_SEGMENTS } from '../constants';
+
+const ForcesScene: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  // ✓ CORRECT: Visual element timing derived from narration segments
+  const segments = AUDIO_SEGMENTS.forces;
+  const liftStart = segments[0].startFrame;      // "升力" segment
+  const gravityStart = segments[1].startFrame;    // "重力" segment
+  const thrustStart = segments[2].startFrame;     // "推力" segment
+
+  const liftProgress = spring({ frame: frame - liftStart, fps, config: { damping: 200 } });
+  const gravityProgress = spring({ frame: frame - gravityStart, fps, config: { damping: 200 } });
+
+  return (
+    <AbsoluteFill>
+      <ForceArrow direction="up" label="升力" progress={liftProgress} />
+      <ForceArrow direction="down" label="重力" progress={gravityProgress} />
+    </AbsoluteFill>
+  );
+};
+```
+
+### Anti-Pattern: Hardcoded "visual rhythm"
+
+```tsx
+// ✗ WRONG: Timing based on "looks good" — will desync after timeline rebuild
+const liftProgress = spring({ frame: frame - 30, fps, ... });
+const gravityProgress = spring({ frame: frame - 50, fps, ... });
+const thrustProgress = spring({ frame: frame - 70, fps, ... });
+```
+
+### What to sync vs. what's free
+
+| Element Type | Timing Source | Example |
+|-------------|--------------|---------|
+| Content visuals (illustrate narrated concepts) | `AUDIO_SEGMENTS.sceneKey[N].startFrame` | Arrow appears when narrator says "升力" |
+| Scene title | `SCENE_PAD` (first few frames) | Title fades in at scene start |
+| Decorative / ambient | Free (hardcoded OK) | Background particles, floating clouds |
+| Exit animations | Scene duration - exit buffer | Elements fade before scene transition |
+
+### Lead time for visual anticipation
+
+Sometimes you want a visual to appear slightly BEFORE the narration (1-5 frames) to give viewers visual context. This is acceptable:
+
+```tsx
+const VISUAL_LEAD = 5; // frames of anticipation
+const liftStart = segments[0].startFrame - VISUAL_LEAD;
+```
+
+Do NOT exceed 10 frames (0.33s at 30fps) of lead time — beyond that it becomes a desync.
 
 ---
 

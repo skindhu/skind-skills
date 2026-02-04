@@ -20,6 +20,8 @@ npx tsx ../scripts/generate-tts.ts <CompositionName>
 
 The script auto-extracts text from `NARRATION` in constants.ts, preprocesses it (remove markers, convert numbers to Chinese, handle abbreviations), and generates per-segment mp3 files to `public/audio/narration/`.
 
+> ✅ **Checkpoint**: Update PROGRESS.md — mark `[x] TTS audio generated` and note segment count.
+
 ## Step 3: Rebuild Timeline
 
 ```bash
@@ -32,13 +34,29 @@ The script measures audio durations via ffprobe, recalculates SCENES/TOTAL_FRAME
 
 **Timeline algorithm**: Each scene = PAD + segments(duration + GAP) + PAD. Scenes chain with TransitionSeries overlap = TRANSITION_DURATION.
 
-## Step 4: Adjust Animation Keyframes
+> ✅ **Checkpoint**: Update PROGRESS.md — mark `[x] Timeline rebuilt` and `[x] AUDIO_SEGMENTS updated with real timing`.
 
-When scene durations change, scale animation keyframes proportionally:
-```
-ratio = newDuration / oldDuration
-newKeyframe = Math.round(oldKeyframe * ratio)
-```
+## Step 4: Align Animation Keyframes to AUDIO_SEGMENTS
+
+After timeline rebuild, visual animation keyframes must be re-aligned to the updated `AUDIO_SEGMENTS` timing:
+
+1. **Already referencing AUDIO_SEGMENTS?** → No action needed. The code already reads from `AUDIO_SEGMENTS.sceneKey[N].startFrame`, which was updated by Step 3.
+
+2. **Using hardcoded frame numbers?** → Replace with `AUDIO_SEGMENTS` references:
+   ```tsx
+   // Before (hardcoded — WRONG):
+   const arrowStart = 30;
+   // After (derived — CORRECT):
+   const arrowStart = AUDIO_SEGMENTS.forces[0].startFrame;
+   ```
+
+3. **Decorative animations** (particles, ambient effects) that don't correspond to narration: scale proportionally:
+   ```
+   ratio = newDuration / oldDuration
+   newKeyframe = Math.round(oldKeyframe * ratio)
+   ```
+
+> ✅ **Checkpoint**: Update PROGRESS.md — mark `[x] Animation keyframes aligned to AUDIO_SEGMENTS`.
 
 ## Step 5: Background Music
 
@@ -81,6 +99,8 @@ export const AudioLayer: React.FC = () => {
   );
 };
 ```
+
+> ✅ **Checkpoint**: Update PROGRESS.md — mark `[x] AudioLayer component created`.
 
 ## Step 7: Integrate AudioLayer
 

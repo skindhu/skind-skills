@@ -133,10 +133,10 @@ function getKeyframes(
   let SCENES: Record<string, SceneDef>;
 
   const scenesMatch = source.match(
-    /export\s+const\s+SCENES\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
+    /export\s+const\s+SCENES\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*as\s+const/,
   );
   const sceneFramesMatch = source.match(
-    /export\s+const\s+SCENE_FRAMES\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
+    /export\s+const\s+SCENE_FRAMES\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*as\s+const/,
   );
 
   if (scenesMatch) {

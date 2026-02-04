@@ -47,6 +47,8 @@ The script will automatically:
 | Disabled patterns | transition:, animate-, setTimeout, etc. | [§7 禁用模式](#7-禁用模式-remotion-项目通用) |
 | Layout conflicts | Non-subtitle text with bottom ≥ 850 | [§8 布局区域](#8-布局区域-1920×1080-画布) |
 
+> ✅ **Checkpoint**: Update PROGRESS.md — mark `[x] Round 1: style-scan` and record Critical/Important/Minor counts.
+
 ## Step 2: Keyframe Screenshot Review
 
 Render actual frame screenshots and use image analysis to check visual issues that code scanning cannot detect:
@@ -95,12 +97,15 @@ Render actual frame screenshots and use image analysis to check visual issues th
    | Animation reasonableness | Is animation smooth, rhythm matches content, aids understanding | 🟡Important |
    | Transparent/checkerboard frames | Are there frames showing checkerboard (transparent) or pure white/black backgrounds | 🟡Important |
    | **Ambient atmosphere** | Does the scene have ambient effects (particles, glow, grain, subtle motion)? Completely static backgrounds feel flat | 🟡Important |
+   | **Visual-narration sync** | **Do visual elements (arrows, diagrams, icons) appear at the same time as their corresponding narration/subtitle? Elements appearing >10 frames (0.33s) before subtitle = desync** | 🔴Critical |
 
 3. **Generate visual report**: For each issue found, include:
    - Screenshot filename and frame number
    - Problem area description (e.g., "text in bottom-left obscured by arrow")
    - Corresponding source file and likely fix location
    - Specific fix suggestions
+
+> ✅ **Checkpoint**: Update PROGRESS.md — mark `[x] Round 1: keyframe screenshots rendered` and `[x] Round 1: visual review completed`.
 
 ## Step 3: Auto-Fix
 
@@ -112,6 +117,8 @@ Based on issues from Step 1/2 reports, automatically modify TSX source code:
 4. **Screenshot issue fixes**: [§9](#9-截图审查规则图像识别) screenshot review issues require locating source code based on specific report descriptions and fix suggestions
 5. **Regression verification**: After fixes complete, re-run Step 1 code scan + Step 2 screenshot review to confirm issues resolved and no new issues introduced
 6. **Loop condition**: If regression check still has 🔴Critical issues, continue fix→check loop, maximum 3 rounds
+
+> ✅ **Checkpoint**: Update PROGRESS.md — mark `[x] Round 1: fixes applied`. If Round 2 needed, mark those items too.
 
 ## Step 4: Start Project
 
@@ -238,7 +245,17 @@ Output Markdown report, each issue contains:
 
 **修复策略**: 元素底部侵入字幕区或与字幕间距 < 30px → 上移该元素（减小 top 值或增大 bottom 值）使其底部 ≤ 850（即与字幕区保持 ≥ 30px 间距）。字幕位置不标准 → 将 `bottom` 改为 20。
 
-### 9. 截图审查规则（图像识别）
+### 9. 视觉-旁白对齐
+
+检查场景 TSX 中与旁白内容对应的视觉元素是否从 `AUDIO_SEGMENTS` 派生 timing：
+
+- 硬编码帧数（如 `delay={30}`, `startFrame={50}`）且该元素对应旁白内容的：🔴严重
+- 引用 `AUDIO_SEGMENTS` 但有 >10 帧 lead time 的：🟡重要
+- 纯装饰元素（背景粒子、环境氛围）硬编码帧数：✅ 豁免
+
+**修复策略**: 将硬编码 `startFrame` / `delay` 替换为 `AUDIO_SEGMENTS.sceneKey[N].startFrame`（允许 `- VISUAL_LEAD` 做 1-5 帧提前量）。参考 animation-guide.md "Narration-Synced Animation" 章节。
+
+### 10. 截图审查规则（图像识别）
 
 以下规则通过渲染关键帧截图 + 图像分析执行，用于发现代码扫描无法检测的问题:
 
@@ -269,6 +286,6 @@ Output Markdown report, each issue contains:
 **修复策略**: 截图审查发现的问题需根据具体描述定位源码并修复（无固定策略，靠 AI 根据报告中的修复建议判断）。
 
 ### 严重级别汇总
-- 🔴严重(必修): fontSize < 32px、超出安全区、禁用动画模式、文字重叠不可读、截图中文字被遮挡
+- 🔴严重(必修): fontSize < 32px、超出安全区、禁用动画模式、文字重叠不可读、截图中文字被遮挡、视觉-旁白硬编码 desync
 - 🟡重要(应修): 颜色不在调色板、间距非 8px 倍数、居中元素 < 20% 画布宽、图标 < 72px、画面视觉不平衡
 - 🟢轻微(可优化): 间距微偏、圆角不标准、strokeWidth 非标准、整体美观微调

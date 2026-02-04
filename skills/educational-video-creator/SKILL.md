@@ -111,15 +111,27 @@ Every conversation turn may follow a context loss (compaction, new session). **B
 
 > Skipping this protocol causes repeated work or file corruption. Always run it first.
 
-## Progress Tracking
+## Progress Tracking — Mandatory Protocol
 
-Maintain a progress file at `remotion_video/PROGRESS.md` throughout execution:
+⚠️ **This protocol is NON-NEGOTIABLE. Skipping updates causes context loss and repeated work.**
 
-1. **Create** the file at the start of Phase 1 using the template from [progress-template.md](assets/progress-template.md)
-2. **Update** after completing each checkbox item — mark `[ ]` → `[x]` and add notes
-3. **Update "Current State"** section whenever you change phases or steps
-4. **Log decisions** in the Decisions table so they survive context loss
-5. **Add every created file** to the "Files Created" section for recovery verification
+Maintain `remotion_video/PROGRESS.md` using [progress-template.md](assets/progress-template.md). Create it at Phase 1 start. Log decisions in the Decisions table and add every created file to "Files Created".
+
+### Checkpoint Rule
+
+**Every time you complete a checkbox item in PROGRESS.md, you MUST immediately:**
+1. Mark the item `[x]` and add brief notes
+2. Update the "Current State" section (Current Phase + Current Step)
+3. Then — and only then — proceed to the next item
+
+Do NOT batch multiple items. One item done → one update → next item.
+
+### Phase Transition Gate
+
+**Before starting any new Phase, you MUST:**
+1. Read `PROGRESS.md` and verify ALL items in the previous phase are `[x]`
+2. Update "Current Phase" to the new phase
+3. If any previous item is unchecked, complete it first
 
 ## Workflow
 
@@ -139,7 +151,7 @@ For detailed question templates, see [requirements-guide.md](references/requirem
 
 ### Phase 1.5: Script Writing
 
-> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 1.5 items as you complete them.
+> ⚠️ **Checkpoint Rule active**: After completing EACH checkbox item for this phase, immediately update `PROGRESS.md`. Do not batch updates.
 
 Write a complete narrative script before designing the storyboard. This phase focuses purely on **storytelling** — what to say and how to say it well — without worrying about visual specs, frame numbers, or animation parameters.
 
@@ -174,7 +186,7 @@ See [script-and-narration.md](references/script-and-narration.md) for video stru
 
 ### Phase 2: Storyboard Design
 
-> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 2 items as you complete them.
+> ⚠️ **Checkpoint Rule active**: After completing EACH checkbox item for this phase, immediately update `PROGRESS.md`. Do not batch updates.
 
 Convert the approved script into a production-ready storyboard. The script provides **what to say**; the storyboard defines **how to show it**.
 
@@ -197,7 +209,7 @@ See [script-and-narration.md](references/script-and-narration.md) Part 4 for sub
 
 ### Phase 3: Visual Design
 
-> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 3 items as you complete them.
+> ⚠️ **Checkpoint Rule active**: After completing EACH checkbox item for this phase, immediately update `PROGRESS.md`. Do not batch updates.
 
 Apply the Kurzgesagt/回形针 style. Concrete steps:
 
@@ -218,7 +230,7 @@ See [visual-principles.md](references/visual-principles.md) for composition and 
 
 ### Phase 4: Animation Production
 
-> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 4 items as you complete them. Log key file paths in "Key files".
+> ⚠️ **Checkpoint Rule active**: After completing EACH checkbox item for this phase, immediately update `PROGRESS.md`. Do not batch updates. Log key file paths in "Files Created".
 
 Implement scenes using Remotion:
 
@@ -233,6 +245,14 @@ Implement scenes using Remotion:
 - Subtitle components **must** reference `AUDIO_SEGMENTS.sceneKey` — never use inline segment arrays with hardcoded frame numbers
 - `AUDIO_SEGMENTS` 中的 `startFrame`/`endFrame` **必须使用场景本地帧号**（每个场景从 `SCENE_PAD`=15 开始），**不是全局帧号**。因为 AudioLayer 和 SubtitleSequence 都在场景的 `<Sequence>` 内部运行，`useCurrentFrame()` 返回的是本地帧号。如果使用全局帧号，后续场景的字幕会延迟或完全不显示
 - This ensures `rebuild-timeline.ts --write` in Phase 4.5 can update timing without modifying any scene files
+
+**Visual-narration alignment rules (prevents animation-subtitle desync):**
+- 每个与旁白内容对应的视觉元素（图标出现、箭头展开、图表绘制等），其 `startFrame` **必须从 `AUDIO_SEGMENTS` 对应段的 `startFrame` 派生**，不能凭"视觉节奏"硬编码
+- 正确模式：`const liftArrowStart = AUDIO_SEGMENTS.forces[0].startFrame;`（升力箭头在旁白说"升力"时出现）
+- 错误模式：`const liftArrowStart = 30;`（凭感觉写的帧数，和旁白无关）
+- 纯装饰性动画（背景粒子、环境氛围）不受此约束，可以自由定时
+- Phase 4 使用估算 AUDIO_SEGMENTS；Phase 4.5 rebuild-timeline 更新真实时间后，因为代码引用的是变量而非硬编码数字，视觉动画会自动同步
+- 参考 [animation-guide.md](references/animation-guide.md) "Narration-Synced Animation" 章节的实现模式
 
 **Background rules (prevents transparent/checkerboard frames during transitions):**
 - The main composition **must** have a persistent `<AbsoluteFill>` background layer (using `COLORS.background`) that sits behind all scenes and never participates in transitions
@@ -259,7 +279,7 @@ See [animation-guide.md](references/animation-guide.md) for timing and easing.
 
 ### Phase 4.5: Audio Generation
 
-> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 4.5 items as you complete them. Record audio file count.
+> ⚠️ **Checkpoint Rule active**: After completing EACH checkbox item for this phase, immediately update `PROGRESS.md`. Do not batch updates.
 
 完成动画编码后，生成视频音频并同步时间线：
 
@@ -274,7 +294,7 @@ See [animation-guide.md](references/animation-guide.md) for timing and easing.
 
 ### Phase 5: Quality Assurance
 
-> 📋 Update `remotion_video/PROGRESS.md`: mark Phase 5 items as you complete them. Record scan results in Report.
+> ⚠️ **Checkpoint Rule active**: After completing EACH checkbox item for this phase, immediately update `PROGRESS.md`. Do not batch updates.
 
 完成编码后，执行自动质量检查流程：
 

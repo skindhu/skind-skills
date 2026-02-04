@@ -135,7 +135,7 @@ if (sceneKeys.length === 0) {
 
 // Validate SCENES keys match NARRATION keys
 const narrationKeysMatch = constantsContent.match(
-  /export\s+const\s+NARRATION\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
+  /export\s+const\s+NARRATION\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*as\s+const/,
 );
 if (narrationKeysMatch) {
   const narrationBlock = narrationKeysMatch[1];
@@ -292,7 +292,7 @@ function extractTexts(): Map<string, string[]> {
 
   // Try NARRATION object
   const narrationMatch = constantsContent.match(
-    /export\s+const\s+NARRATION\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
+    /export\s+const\s+NARRATION\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*as\s+const/,
   );
   if (narrationMatch) {
     const block = narrationMatch[1];
