@@ -3,7 +3,7 @@
  *
  * Automated style compliance scanner for educational video compositions.
  * Scans all TSX files in a composition directory against quantified rules
- * from style-check-rules.md and outputs a Markdown report.
+ * from quality-checklist.md (Appendix: Style Check Rules) and outputs a Markdown report.
  *
  * Usage (run from remotion_video/ directory):
  *   npx tsx <path>/style-scan.ts <CompositionName>
@@ -123,8 +123,11 @@ function scanFile(filePath: string): Issue[] {
     const line = lines[i];
     const lineNum = i + 1;
 
-    // Skip comments and imports
+    // Skip comments, imports, and string-only lines
     if (/^\s*(\/\/|\/\*|\*|import\s)/.test(line)) continue;
+    // Skip lines that are entirely inside a template literal or string assignment
+    // (reduces false positives for hex colors and spacing values in text content)
+    if (/^\s*['"`].*['"`]\s*[,;]?\s*$/.test(line)) continue;
 
     // --- fontSize check ---
     const fontSizeMatch = line.match(/fontSize\s*:\s*(\d+)/);
@@ -135,9 +138,34 @@ function scanFile(filePath: string): Issue[] {
           severity: "critical",
           file: relPath,
           line: lineNum,
-          message: `fontSize: ${size} (minimum: 32)`,
+          message: `fontSize: ${size} (absolute minimum: 32)`,
           fix: "Change to 32 or larger",
         });
+      } else {
+        // Element-type-specific font size checks (§1 of quality-checklist.md Appendix)
+        // Heuristic: use context (variable name, component name, surrounding lines) to infer element type
+        const contextWindow = lines.slice(Math.max(0, i - 3), i + 3).join("\n");
+        if (/title|Title|heading|Heading/i.test(contextWindow) && !/subtitle|Subtitle/i.test(contextWindow)) {
+          if (size < 48) {
+            issues.push({
+              severity: "important",
+              file: relPath,
+              line: lineNum,
+              message: `fontSize: ${size} in title/heading context (minimum: 48, recommended: 64)`,
+              fix: "Change to 48 or larger for headings, 72+ for main titles",
+            });
+          }
+        } else if (/body|Body|label|Label|caption|Caption/i.test(contextWindow) && !isSubtitleComponent) {
+          if (size < 36) {
+            issues.push({
+              severity: "important",
+              file: relPath,
+              line: lineNum,
+              message: `fontSize: ${size} in body/label context (minimum: 36, recommended: 48)`,
+              fix: "Change to 36 or larger",
+            });
+          }
+        }
       }
     }
 

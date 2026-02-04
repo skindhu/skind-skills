@@ -345,7 +345,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
           height: '100%',
           backgroundColor: fillColor,
           borderRadius,
-          transition: animated ? 'none' : 'width 0.3s',
+          // No CSS transitions — all width changes driven by interpolate() above
         }}
       />
     </div>
@@ -642,7 +642,7 @@ export const AnimatedBarChart: React.FC<BarChartProps> = ({
               width={barWidth}
               height={barHeight}
               rx={4}
-              fill={item.color ?? COLORS.accent.primary}
+              fill={item.color ?? COLORS.accent.rose}
             />
             {/* Value label */}
             <text
@@ -650,7 +650,7 @@ export const AnimatedBarChart: React.FC<BarChartProps> = ({
               y={y - 8}
               textAnchor="middle"
               fill={COLORS.text}
-              fontSize={24}
+              fontSize={32}
               fontWeight={700}
               opacity={progress}
             >
@@ -662,7 +662,7 @@ export const AnimatedBarChart: React.FC<BarChartProps> = ({
               y={height - 12}
               textAnchor="middle"
               fill={COLORS.textMuted ?? '#b0b0b0'}
-              fontSize={20}
+              fontSize={32}
               opacity={progress}
             >
               {item.label}
@@ -745,7 +745,7 @@ export const AnimatedLineChart: React.FC<LineChartProps> = ({
       <path
         d={pathD}
         fill="none"
-        stroke={color ?? COLORS.accent.primary}
+        stroke={color ?? COLORS.accent.rose}
         strokeWidth={4}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -766,7 +766,7 @@ export const AnimatedLineChart: React.FC<LineChartProps> = ({
             cx={p.x}
             cy={p.y}
             r={6 * pointProgress}
-            fill={color ?? COLORS.accent.primary}
+            fill={color ?? COLORS.accent.rose}
           />
         );
       })}
@@ -863,6 +863,200 @@ export const AnimatedPieChart: React.FC<PieChartProps> = ({
   ]}
   startFrame={30}
 />
+```
+
+---
+
+## Domain-Specific Illustration Patterns
+
+When building educational videos, **every scene needs at least one visual illustration** — not just text labels in colored boxes. This section shows how to create Kurzgesagt-style domain illustrations and upgrade common "PPT-like" patterns.
+
+### Illustration Design Principles
+
+Kurzgesagt-style SVG illustrations follow these rules:
+
+1. **Geometric shapes with rounded corners** — use `rx`/`ry` on `<rect>`, rounded `<path>` segments, `<ellipse>` for organic forms
+2. **Gradient fills** — `<linearGradient>` or `<radialGradient>` instead of flat solid fills; typically light-to-dark of the same hue
+3. **Multi-layer composition** — build up from background shapes to foreground details; overlap layers for depth
+4. **Consistent stroke** — `strokeWidth` 1-2px, `strokeLinejoin="round"`, slightly darker than fill color
+5. **Limited detail** — simplify real objects to 5-10 essential shapes; avoid photorealism
+6. **Accent details** — small highlights (windows, buttons, glow effects) add polish without complexity
+
+### Example: Kurzgesagt-Style Object Illustration
+
+```tsx
+/**
+ * A simplified lightbulb illustration — Kurzgesagt style.
+ * Demonstrates: gradient fills, rounded geometry, glow effects, layered composition.
+ */
+const LightbulbIllustration: React.FC<{ glowing?: boolean }> = ({ glowing = true }) => (
+  <svg width={120} height={160} viewBox="0 0 120 160">
+    <defs>
+      <linearGradient id="bulb-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#ffeaa7" />
+        <stop offset="100%" stopColor="#fdcb6e" />
+      </linearGradient>
+      <linearGradient id="base-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#b2bec3" />
+        <stop offset="100%" stopColor="#636e72" />
+      </linearGradient>
+      {glowing && (
+        <radialGradient id="glow">
+          <stop offset="0%" stopColor="#ffeaa7" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#ffeaa7" stopOpacity="0" />
+        </radialGradient>
+      )}
+    </defs>
+    {/* Outer glow */}
+    {glowing && <circle cx="60" cy="60" r="55" fill="url(#glow)" />}
+    {/* Glass bulb — rounded shape */}
+    <ellipse cx="60" cy="60" rx="38" ry="42" fill="url(#bulb-grad)" stroke="#f0c040" strokeWidth="2" />
+    {/* Filament */}
+    <path d="M 48 65 Q 55 45 60 65 Q 65 45 72 65" fill="none" stroke="#e17055" strokeWidth="2.5" strokeLinecap="round" />
+    {/* Metal base — stacked rounded rects */}
+    <rect x="42" y="98" width="36" height="8" rx="2" fill="url(#base-grad)" stroke="#636e72" strokeWidth="1" />
+    <rect x="44" y="106" width="32" height="6" rx="2" fill="url(#base-grad)" stroke="#636e72" strokeWidth="1" />
+    <rect x="46" y="112" width="28" height="6" rx="2" fill="url(#base-grad)" stroke="#636e72" strokeWidth="1" />
+    {/* Bottom contact */}
+    <circle cx="60" cy="122" r="6" fill="#636e72" />
+  </svg>
+);
+```
+
+### Illustrated Flow Node Pattern
+
+**Problem**: Flow charts with plain colored boxes + text look like PPT slides.
+
+**Solution**: Replace text-only boxes with icon+text nodes.
+
+```tsx
+/**
+ * An illustrated flow node — replaces plain text boxes in flow charts.
+ * Each node has an icon/mini-illustration above the label.
+ */
+const FlowNode: React.FC<{
+  icon: React.ReactNode;  // SVG icon or mini illustration
+  label: string;
+  color: string;
+  delay: number;
+}> = ({ icon, label, color, delay }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const progress = spring({ frame: frame - delay, fps, config: { damping: 200 } });
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+      opacity: progress, transform: `scale(${interpolate(progress, [0, 1], [0.8, 1])})`,
+    }}>
+      {/* Icon area with soft background glow */}
+      <div style={{
+        width: 72, height: 72, borderRadius: 20,
+        background: `radial-gradient(circle, ${color}33 0%, transparent 70%)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {icon}
+      </div>
+      {/* Label */}
+      <span style={{
+        fontSize: 22, fontWeight: 600, color: '#ffffff',
+        textShadow: `0 0 8px ${color}`,
+      }}>
+        {label}
+      </span>
+    </div>
+  );
+};
+
+// Usage in a flow chart:
+// <FlowNode
+//   icon={<FactoryIcon />}           // SVG component, not emoji
+//   label="企业抢人"
+//   color="#4facfe"
+//   delay={30}
+// />
+// Instead of:
+// <div style={{ background: '#334', padding: 16, borderRadius: 8 }}>
+//   <span>企业抢人</span>           // ← This is the PPT anti-pattern
+// </div>
+```
+
+### Flow Arrow Connector
+
+```tsx
+/**
+ * Animated arrow connecting flow nodes — with gradient and glow.
+ */
+const FlowArrow: React.FC<{ delay: number; color?: string }> = ({ delay, color = '#ffffff' }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const progress = spring({ frame: frame - delay, fps, config: { damping: 200 } });
+
+  return (
+    <svg width={50} height={24} viewBox="0 0 50 24" style={{ opacity: progress }}>
+      <defs>
+        <linearGradient id="arrow-connector-grad" x1="0%" x2="100%">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.9" />
+        </linearGradient>
+      </defs>
+      <line x1="0" y1="12" x2="35" y2="12" stroke="url(#arrow-connector-grad)" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M 30 4 L 46 12 L 30 20" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
+```
+
+### Ambient Effects Helper
+
+Every scene should have an ambient layer. Here is a reusable pattern:
+
+```tsx
+/**
+ * Floating particle system — adds depth and atmosphere.
+ * Use different shapes for different topics:
+ *   - Circles → general / science
+ *   - Stars → space / cosmic
+ *   - Bubbles → underwater / biology
+ */
+const AmbientParticles: React.FC<{
+  count?: number;
+  color?: string;
+  maxSize?: number;
+}> = ({ count = 8, color = 'rgba(255,255,255,0.06)', maxSize = 60 }) => {
+  const frame = useCurrentFrame();
+  const { durationInFrames } = useVideoConfig();
+
+  // Deterministic pseudo-random positions (no Math.random — Remotion requires determinism)
+  const particles = Array.from({ length: count }, (_, i) => ({
+    x: ((i * 137.5) % 100),  // Golden angle distribution
+    y: ((i * 89.3 + 20) % 100),
+    size: maxSize * (0.4 + (i % 3) * 0.3),
+    speed: 0.1 + (i % 4) * 0.08,
+  }));
+
+  return (
+    <AbsoluteFill style={{ pointerEvents: 'none' }}>
+      {particles.map((p, i) => {
+        const drift = interpolate(frame, [0, durationInFrames], [0, p.speed * 150], {
+          extrapolateRight: 'clamp',
+        });
+        return (
+          <div key={i} style={{
+            position: 'absolute',
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            transform: `translateX(${drift}px)`,
+          }}>
+            <svg width={p.size} height={p.size} viewBox="0 0 40 40">
+              <circle cx="20" cy="20" r="18" fill={color} />
+            </svg>
+          </div>
+        );
+      })}
+    </AbsoluteFill>
+  );
+};
 ```
 
 ---

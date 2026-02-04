@@ -6,6 +6,16 @@ Convert a completed script into detailed visual storyboards for implementation. 
 
 **Your job here**: Break the script into scenes and add visual layers, animation specs, frame-level timing, sync points, and asset inventories. You do NOT need to write the narrative — it's already done.
 
+### Frame Numbering: Global vs Local
+
+The storyboard uses **global frame numbers** (absolute position in the full video timeline) for planning scene boundaries and total duration. However, when implementing in code:
+
+- **`SCENES` in constants.ts** uses global frames: `{ start: 0, duration: 180 }`
+- **`AUDIO_SEGMENTS` in constants.ts** uses **local frames** (each scene restarts from `SCENE_PAD`=15): `{ startFrame: 15, endFrame: 80 }`
+- Inside each scene component, `useCurrentFrame()` returns the **local** frame number (0 at scene start)
+
+This distinction is critical: if you accidentally put global frame numbers into `AUDIO_SEGMENTS`, subtitles in later scenes will be delayed or invisible because the local frame counter never reaches those values.
+
 This template supports two levels of detail: Quick Template for initial brainstorming and Full Template for production-ready planning.
 
 ## Table of Contents
@@ -171,8 +181,10 @@ Use this template for production-ready storyboards. Each scene includes comprehe
 > 
 > **Bold** = Stressed words
 > *Italic* = Softer tone
-> [PAUSE] = Deliberate pause (1-2s)
-> [...] = Brief pause (0.5s)
+> [.] = Short pause (0.3-0.5s)
+> [..] = Medium pause (0.5-1s)
+> [...] = Long pause (1-2s)
+> [PAUSE] or [BEAT] = Dramatic pause (2-3s)
 
 **Word Count**: [X words/characters]
 **Estimated Duration**: [X seconds at Y words/sec]
@@ -226,10 +238,17 @@ Use this template for production-ready storyboards. Each scene includes comprehe
 | "这就是..." | 500 | All elements highlight |
 
 ### Required Assets
+
+> **Important**: Each SVG asset must include a **Structure** description (geometric shapes that compose it) and a **Style** description (gradients, stroke, colors). This bridges the gap between storyboard design and Phase 4 implementation — without structural guidance, implementations tend to fall back to plain text boxes.
+
 - **SVG Components**:
   - `Airplane`: Cartoon airplane, side view
+    - Structure: Rounded-rect fuselage (rx=15) + triangular wings + elliptical tail fin + circular windows
+    - Style: Light-to-dark gradient fill (#e8edf2→#b8c6d4), 1.5px stroke, rounded joins
   - `ForceArrow`: Directional arrow with label slot
-- **Icons**: [List if any]
+    - Structure: Gradient line + chevron head
+    - Style: Color gradient (0.6→1.0 opacity), feGaussianBlur glow filter, text-shadow on label
+- **Icons**: [List with structure descriptions]
 - **Colors Used**:
   - Background: #1a1a2e
   - Lift: #74b9ff
@@ -237,6 +256,7 @@ Use this template for production-ready storyboards. Each scene includes comprehe
 - **Typography**:
   - Labels: Inter Bold 24px
   - Subtitles: Noto Sans SC 36px
+- **Ambient Effects**: [e.g., Floating clouds (3-5 ellipse clusters, rgba white 0.06-0.08, slow horizontal drift)]
 
 ### Transition to Next Scene
 - **Type**: [Fade / Slide / Wipe / Zoom / Custom]

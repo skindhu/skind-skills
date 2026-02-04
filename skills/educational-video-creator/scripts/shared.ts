@@ -28,7 +28,19 @@ export function splitNarrationText(text: string): string[] {
           buffer = clause;
         }
       }
-      if (buffer.trim()) result.push(buffer.trim());
+      if (buffer.trim()) {
+        const remaining = buffer.trim();
+        // Fallback: if a single clause still exceeds 25 chars (no comma splits),
+        // hard-cut at 25-char boundaries to stay within TTS limits
+        if (remaining.length > 25) {
+          for (let i = 0; i < remaining.length; i += 25) {
+            const chunk = remaining.slice(i, i + 25).trim();
+            if (chunk) result.push(chunk);
+          }
+        } else {
+          result.push(remaining);
+        }
+      }
     }
   }
   return result;

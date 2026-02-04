@@ -14,6 +14,7 @@
  *   --pad <frames>         Scene start/end padding in frames (default: 15)
  *   --transition <frames>  TransitionSeries overlap per transition (default: auto from TRANSITION_DURATION in constants.ts, or 0)
  *   --write                Write directly to constants.ts (default: stdout only)
+ *   --verify               Verify state consistency and output JSON status (no modifications)
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, globSync } from "fs";
@@ -62,6 +63,7 @@ const GAP_FRAMES = Number(getArg("--gap") || "6");
 const SCENE_PAD = Number(getArg("--pad") || "15");
 const transitionArg = getArg("--transition"); // resolved after constants.ts is read
 const writeMode = hasFlag("--write");
+const verifyMode = hasFlag("--verify");
 
 // ---------------------------------------------------------------------------
 // Types
@@ -131,6 +133,31 @@ if (sceneKeys.length === 0) {
   process.exit(1);
 }
 
+// Validate SCENES keys match NARRATION keys
+const narrationKeysMatch = constantsContent.match(
+  /export\s+const\s+NARRATION\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
+);
+if (narrationKeysMatch) {
+  const narrationBlock = narrationKeysMatch[1];
+  const narrationKeys: string[] = [];
+  // Match keys at the start of lines (or after whitespace), excluding words inside quoted strings
+  const lines = narrationBlock.split("\n");
+  for (const line of lines) {
+    const keyMatch = line.match(/^\s*(\w+)\s*:/);
+    if (keyMatch) {
+      narrationKeys.push(keyMatch[1]);
+    }
+  }
+  const missingInNarration = sceneKeys.filter((k) => !narrationKeys.includes(k));
+  const extraInNarration = narrationKeys.filter((k) => !sceneKeys.includes(k));
+  if (missingInNarration.length > 0) {
+    console.warn(`⚠️  SCENES keys missing from NARRATION: ${missingInNarration.join(", ")}`);
+  }
+  if (extraInNarration.length > 0) {
+    console.warn(`⚠️  NARRATION keys not in SCENES: ${extraInNarration.join(", ")}`);
+  }
+}
+
 // Parse old TOTAL_FRAMES
 const totalFramesMatch = constantsContent.match(
   /export\s+const\s+TOTAL_FRAMES\s*=\s*(\d+)/,
@@ -160,7 +187,7 @@ if (!existsSync(audioDir)) {
   process.exit(1);
 }
 
-const audioFilePattern = /^(\w+)-seg(\d+)\.mp3$/;
+const audioFilePattern = /^([\w-]+?)-seg(\d+)\.mp3$/;
 const allFiles = readdirSync(audioDir).filter((f) => audioFilePattern.test(f)).sort();
 
 if (allFiles.length === 0) {
@@ -200,15 +227,56 @@ for (const [, files] of audioByScene) {
     const filePath = path.join(audioDir, af.filename);
     try {
       const output = execSync(
-        `ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${filePath}"`,
+        `ffprobe -v quiet -show_entries format=duration -of csv=p=0 -- "${filePath}"`,
         { encoding: "utf-8", timeout: 10000 },
       ).trim();
-      af.durationMs = Math.round(parseFloat(output) * 1000);
+      const parsed = parseFloat(output);
+      if (isNaN(parsed) || parsed <= 0) {
+        console.error(`  WARNING: Invalid duration for ${af.filename}: "${output}" — skipping`);
+        af.durationMs = 0;
+      } else {
+        af.durationMs = Math.round(parsed * 1000);
+      }
     } catch (err: any) {
       console.error(`  Failed to measure ${af.filename}: ${err.message}`);
       af.durationMs = 0;
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// 3.5. Verify mode — output status JSON and exit
+// ---------------------------------------------------------------------------
+
+if (verifyMode) {
+  const status: Record<string, unknown> = {
+    composition: compositionName,
+    scenesInConstants: sceneKeys.length,
+    scenesWithAudio: audioByScene.size,
+    totalAudioFiles: allFiles.length,
+    missingScenes: sceneKeys.filter((k) => !audioByScene.has(k)),
+    extraScenes: [...audioByScene.keys()].filter((k) => !sceneKeys.includes(k)),
+    segmentsPerScene: Object.fromEntries(
+      [...audioByScene.entries()].map(([k, v]) => [k, v.length]),
+    ),
+    zeroDurationFiles: allFiles.filter((f) => {
+      const m = f.match(audioFilePattern);
+      if (!m) return false;
+      const files = audioByScene.get(m[1]);
+      return files?.some((af) => af.filename === f && af.durationMs === 0);
+    }),
+    healthy:
+      sceneKeys.every((k) => audioByScene.has(k)) &&
+      [...audioByScene.keys()].every((k) => sceneKeys.includes(k)) &&
+      allFiles.every((f) => {
+        const m = f.match(audioFilePattern);
+        if (!m) return true;
+        const files = audioByScene.get(m[1]);
+        return !files?.some((af) => af.filename === f && af.durationMs === 0);
+      }),
+  };
+  console.log(JSON.stringify(status, null, 2));
+  process.exit(status.healthy ? 0 : 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -296,10 +364,19 @@ for (const sceneKey of sceneKeys) {
   for (let i = 0; i < files.length; i++) {
     const af = files[i];
     const durationFrames = Math.ceil((af.durationMs / 1000) * FPS);
+
+    // Skip zero-duration segments (ffprobe returned NaN or 0)
+    if (durationFrames <= 0) {
+      console.warn(`  Skipping ${af.filename}: zero duration`);
+      continue;
+    }
+
     const startFrame = currentFrame;
     const endFrame = currentFrame + durationFrames;
 
-    const text = i < texts.length ? texts[i] : `(segment ${i})`;
+    // Match text by segIndex (not loop index i) to handle partial TTS failures
+    // where some seg files are missing (e.g., seg00, seg01, seg03 — seg02 failed)
+    const text = af.segIndex < texts.length ? texts[af.segIndex] : `(segment ${af.segIndex})`;
     const paddedIndex = String(af.segIndex).padStart(2, "0");
 
     segTimings.push({
@@ -441,6 +518,11 @@ if (writeMode) {
     .join("\n");
   updated = updated.trimEnd() + "\n\n" + audioSegmentsCode + "\n";
 
+  // Create backup before overwriting
+  const backupPath = constantsPath + ".bak";
+  writeFileSync(backupPath, constantsContent, "utf-8");
+  console.log(`📋 Backup saved: ${backupPath}`);
+
   writeFileSync(constantsPath, updated, "utf-8");
   console.log(`✅ constants.ts updated: ${constantsPath}\n`);
 }
@@ -451,6 +533,31 @@ if (!writeMode) {
 }
 
 console.log(summaryLines.join("\n"));
+
+// ---------------------------------------------------------------------------
+// Auto-update PROGRESS.md (if present and --write was used)
+// ---------------------------------------------------------------------------
+
+const progressPath = path.resolve("./PROGRESS.md");
+if (writeMode && existsSync(progressPath)) {
+  try {
+    let progress = readFileSync(progressPath, "utf-8");
+    // Mark "Timeline rebuilt" as done
+    progress = progress.replace(
+      /- \[ \] Timeline rebuilt \(rebuild-timeline\.ts --write\)/,
+      "- [x] Timeline rebuilt (rebuild-timeline.ts --write)",
+    );
+    // Mark "AUDIO_SEGMENTS updated" as done
+    progress = progress.replace(
+      /- \[ \] AUDIO_SEGMENTS updated with real timing/,
+      "- [x] AUDIO_SEGMENTS updated with real timing",
+    );
+    writeFileSync(progressPath, progress, "utf-8");
+    console.log(`\n📋 PROGRESS.md updated (timeline rebuilt)`);
+  } catch {
+    // Non-fatal
+  }
+}
 
 // Exit with warning code if deviation > 20%
 if (Math.abs(deviationPct) > 20) {

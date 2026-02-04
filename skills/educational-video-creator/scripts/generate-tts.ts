@@ -13,7 +13,7 @@
  *   --output-dir <dir>   Audio output directory (default: public/audio/narration)
  */
 
-import { readFileSync, mkdirSync, existsSync, globSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, globSync, readdirSync, unlinkSync } from "fs";
 import { execFileSync } from "child_process";
 import path from "path";
 import { splitNarrationText, deriveSceneKey } from "./shared";
@@ -90,12 +90,12 @@ function extractFromNarration(source: string): Segment[] | null {
   const block = narrationMatch[1];
   const segments: Segment[] = [];
 
-  // Parse each key: 'value' pair
-  const entryRe = /(\w+)\s*:\s*(?:'([^']*)'|"([^"]*)")/g;
+  // Parse each key: 'value' or `value` pair (single, double, or backtick quotes)
+  const entryRe = /(\w+)\s*:\s*(?:'([^']*)'|"([^"]*)"|`([^`]*)`)/g;
   let match: RegExpExecArray | null;
   while ((match = entryRe.exec(block)) !== null) {
     const sceneKey = match[1];
-    const fullText = match[2] || match[3];
+    const fullText = match[2] || match[3] || match[4];
     if (!fullText) continue;
 
     // Split on Chinese sentence-ending punctuation while keeping segments meaningful
@@ -239,6 +239,21 @@ function preprocessText(text: string): string {
 
 mkdirSync(outputDir, { recursive: true });
 
+// Clean up old audio files for scenes being regenerated to prevent stale segments
+const sceneKeysToGenerate = new Set(segments.map((s) => s.sceneKey));
+if (existsSync(outputDir)) {
+  const oldFiles = readdirSync(outputDir).filter((f) => {
+    const match = f.match(/^([\w-]+?)-seg\d+\.mp3$/);
+    return match && sceneKeysToGenerate.has(match[1]);
+  });
+  if (oldFiles.length > 0) {
+    console.log(`Cleaning ${oldFiles.length} old audio files for regenerated scenes...`);
+    for (const f of oldFiles) {
+      unlinkSync(path.join(outputDir, f));
+    }
+  }
+}
+
 interface TTSResult {
   segment: Segment;
   filename: string;
@@ -246,29 +261,37 @@ interface TTSResult {
   error?: string;
 }
 
+const MAX_RETRIES = 2;
+
 function generateTTS(segment: Segment): TTSResult {
   const paddedIndex = String(segment.index).padStart(2, "0");
   const filename = `${segment.sceneKey}-seg${paddedIndex}.mp3`;
   const outputFile = path.join(outputDir, filename);
   const processedText = preprocessText(segment.text);
 
-  // Use execFileSync (array form) to avoid shell injection
-  try {
-    execFileSync("edge-tts", [
-      `--voice=${voice}`,
-      `--rate=${rate}`,
-      `--text=${processedText}`,
-      `--write-media=${outputFile}`,
-    ], { stdio: "pipe", timeout: 30000 });
-    return { segment, filename, success: true };
-  } catch (err: any) {
-    const msg =
-      err.stderr?.toString().trim() || err.message || "unknown error";
-    return { segment, filename, success: false, error: msg.split("\n")[0] };
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      execFileSync("edge-tts", [
+        `--voice=${voice}`,
+        `--rate=${rate}`,
+        `--text=${processedText}`,
+        `--write-media=${outputFile}`,
+      ], { stdio: "pipe", timeout: 30000 });
+      return { segment, filename, success: true };
+    } catch (err: any) {
+      const msg =
+        err.stderr?.toString().trim() || err.message || "unknown error";
+      if (attempt < MAX_RETRIES) {
+        console.log(`  Retry ${attempt + 1}/${MAX_RETRIES} for ${filename}...`);
+        continue;
+      }
+      return { segment, filename, success: false, error: msg.split("\n")[0] };
+    }
   }
+  return { segment, filename: "", success: false, error: "exhausted retries" };
 }
 
-// Run TTS generation sequentially
+// Run TTS generation sequentially (edge-tts uses network I/O; retries handle transient failures)
 const results: TTSResult[] = [];
 for (let i = 0; i < segments.length; i++) {
   results.push(generateTTS(segments[i]));
@@ -302,6 +325,31 @@ if (failCount > 0) {
 console.log("\nFiles:");
 for (const r of results.filter((r) => r.success)) {
   console.log(`  ${r.filename}`);
+}
+
+// ---------------------------------------------------------------------------
+// 5. Auto-update PROGRESS.md (if present)
+// ---------------------------------------------------------------------------
+
+const progressPath = path.resolve("./PROGRESS.md");
+if (existsSync(progressPath) && failCount === 0) {
+  try {
+    let progress = readFileSync(progressPath, "utf-8");
+    // Update "TTS audio generated (segments: __)" checkbox
+    progress = progress.replace(
+      /- \[ \] TTS audio generated \(segments: __\)/,
+      `- [x] TTS audio generated (segments: ${successCount})`,
+    );
+    // Update audio file count
+    progress = progress.replace(
+      /\(__ files\)/,
+      `(${successCount} files)`,
+    );
+    writeFileSync(progressPath, progress, "utf-8");
+    console.log(`\n📋 PROGRESS.md updated (${successCount} segments)`);
+  } catch {
+    // Non-fatal — skip if PROGRESS.md can't be updated
+  }
 }
 
 if (failCount > 0) {

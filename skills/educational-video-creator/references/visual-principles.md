@@ -209,9 +209,9 @@ const deemphasized = { scale: 0.8, opacity: 0.6 };
 **Method 2: Color and Contrast**
 ```tsx
 // Highlight with accent color
-const highlighted = { color: '#e94560' };  // Accent
-const normal = { color: '#ffffff' };
-const background = { color: '#666666' };
+const highlighted = { color: COLORS.accent.rose };
+const normal = { color: COLORS.text };
+const background = { color: COLORS.textMuted };
 ```
 
 **Method 3: Motion**
@@ -252,7 +252,7 @@ const FocusTransition = ({
         style={{
           opacity,
           transform: `scale(${scale})`,
-          transition: 'none', // Remember: no CSS transitions!
+          // Use useCurrentFrame() + interpolate() for all animations
         }}
       >
         {el}
@@ -493,7 +493,7 @@ const ZoomCircle: React.FC<{
         cy={cy}
         r={radius * scale}
         fill="none"
-        stroke={color ?? COLORS.accent.primary}
+        stroke={color ?? COLORS.accent.rose}
         strokeWidth={4}
         opacity={ringOpacity}
       />
@@ -536,12 +536,12 @@ const LeaderLabel: React.FC<{
     <>
       <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
         {/* Dot at source */}
-        <circle cx={fromX} cy={fromY} r={4} fill={color ?? COLORS.accent.primary} opacity={lineProgress} />
+        <circle cx={fromX} cy={fromY} r={4} fill={color ?? COLORS.accent.rose} opacity={lineProgress} />
         {/* Leader line */}
         <line
           x1={fromX} y1={fromY}
           x2={currentX} y2={currentY}
-          stroke={color ?? COLORS.accent.primary}
+          stroke={color ?? COLORS.accent.rose}
           strokeWidth={2}
           strokeDasharray="6 4"
         />
@@ -556,7 +556,7 @@ const LeaderLabel: React.FC<{
           transform: `translateY(${interpolate(labelProgress, [0, 1], [10, 0])}px)`,
         }}
       >
-        <span style={{ ...TYPOGRAPHY.caption, color: color ?? COLORS.accent.primary }}>
+        <span style={{ ...TYPOGRAPHY.caption, color: color ?? COLORS.accent.rose }}>
           {label}
         </span>
       </div>
@@ -596,8 +596,8 @@ const RegionHighlight: React.FC<{
         top: y,
         width,
         height,
-        backgroundColor: `${color ?? COLORS.accent.primary}22`,
-        border: `2px solid ${color ?? COLORS.accent.primary}`,
+        backgroundColor: `${color ?? COLORS.accent.rose}22`,
+        border: `2px solid ${color ?? COLORS.accent.rose}`,
         borderRadius: 4,
         opacity: progress,
       }}
@@ -609,7 +609,7 @@ const RegionHighlight: React.FC<{
             top: -28,
             left: 0,
             ...TYPOGRAPHY.caption,
-            color: color ?? COLORS.accent.primary,
+            color: color ?? COLORS.accent.rose,
           }}
         >
           {label}

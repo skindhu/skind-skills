@@ -13,8 +13,8 @@
  *   --frames-per-scene <2|4>   Frames per scene (default: auto — ≤10 scenes: 4, >10: 2)
  */
 
-import { execSync } from "child_process";
-import { mkdirSync, existsSync, readdirSync, unlinkSync } from "fs";
+import { execSync, exec } from "child_process";
+import { mkdirSync, existsSync, readdirSync, unlinkSync, readFileSync } from "fs";
 import path from "path";
 
 // ---------------------------------------------------------------------------
@@ -112,7 +112,7 @@ function getKeyframes(
 }
 
 // ---------------------------------------------------------------------------
-// Main (wrapped in async IIFE to support dynamic import in CJS mode)
+// Main
 // ---------------------------------------------------------------------------
 
 (async () => {
@@ -123,22 +123,41 @@ function getKeyframes(
     process.exit(1);
   }
 
-  const mod = await import(constantsPath);
+  // Parse constants.ts as text (avoids dynamic import which may execute
+  // loadFont() and other browser-only code in a Node.js environment)
+  const source = readFileSync(constantsPath, "utf-8");
 
   // Support both formats:
   // 1. SCENES: { name: { start, duration } }
   // 2. SCENE_FRAMES: { name: duration } (compute start from cumulative durations)
   let SCENES: Record<string, SceneDef>;
 
-  if (mod.SCENES && typeof mod.SCENES === "object") {
-    SCENES = mod.SCENES;
-  } else if (mod.SCENE_FRAMES && typeof mod.SCENE_FRAMES === "object") {
-    const transitionFrames = mod.TRANSITION_FRAMES ?? 15;
-    const entries = Object.entries(mod.SCENE_FRAMES) as [string, number][];
+  const scenesMatch = source.match(
+    /export\s+const\s+SCENES\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
+  );
+  const sceneFramesMatch = source.match(
+    /export\s+const\s+SCENE_FRAMES\s*(?::[^=]*)?\s*=\s*\{([\s\S]*?)\}\s*(?:as\s+const)?/,
+  );
+
+  if (scenesMatch) {
     SCENES = {};
+    const entryRe = /(\w[\w-]*)\s*:\s*\{\s*start\s*:\s*(\d+)\s*,\s*duration\s*:\s*(\d+)\s*\}/g;
+    let m: RegExpExecArray | null;
+    while ((m = entryRe.exec(scenesMatch[1])) !== null) {
+      SCENES[m[1]] = { start: Number(m[2]), duration: Number(m[3]) };
+    }
+  } else if (sceneFramesMatch) {
+    const transitionMatch = source.match(
+      /export\s+const\s+TRANSITION_DURATION\s*=\s*(\d+)/,
+    );
+    const transitionFrames = transitionMatch ? Number(transitionMatch[1]) : 15;
+    SCENES = {};
+    const entryRe = /(\w[\w-]*)\s*:\s*(\d+)/g;
+    let m: RegExpExecArray | null;
     let currentStart = 0;
-    for (const [name, duration] of entries) {
-      SCENES[name] = { start: currentStart, duration };
+    while ((m = entryRe.exec(sceneFramesMatch[1])) !== null) {
+      const duration = Number(m[2]);
+      SCENES[m[1]] = { start: currentStart, duration };
       currentStart += duration - transitionFrames;
     }
   } else {
@@ -167,30 +186,39 @@ function getKeyframes(
   console.log(`\nTotal keyframes to render: ${keyframes.length}`);
   console.log(`Output directory: ${outputDir}\n`);
 
+  const CONCURRENCY = 3; // Parallel renders (Chromium is memory-heavy)
   let successCount = 0;
   let failCount = 0;
   const failures: { scene: string; frame: number; error: string }[] = [];
 
-  for (const kf of keyframes) {
-    const outputFile = path.join(
-      outputDir,
-      `scene-${kf.scene}-f${kf.frame}.png`,
-    );
-    const cmd = `npx remotion still --frame ${kf.frame} --output "${outputFile}" ${compositionName}`;
+  // Render keyframes in parallel batches
+  for (let batchStart = 0; batchStart < keyframes.length; batchStart += CONCURRENCY) {
+    const batch = keyframes.slice(batchStart, batchStart + CONCURRENCY);
+    const promises = batch.map(
+      (kf) =>
+        new Promise<void>((resolve) => {
+          const outputFile = path.join(
+            outputDir,
+            `scene-${kf.scene}-f${kf.frame}.png`,
+          );
+          const cmd = `npx remotion still --frame ${kf.frame} --output "${outputFile}" -- ${compositionName}`;
+          console.log(`Rendering frame ${kf.frame} (${kf.scene})...`);
 
-    try {
-      console.log(`Rendering frame ${kf.frame} (${kf.scene})...`);
-      execSync(cmd, { stdio: "pipe" });
-      successCount++;
-    } catch (err: any) {
-      failCount++;
-      const msg =
-        err.stderr?.toString().trim() ||
-        err.message ||
-        "unknown error";
-      failures.push({ scene: kf.scene, frame: kf.frame, error: msg });
-      console.error(`  FAILED: ${msg.split("\n")[0]}`);
-    }
+          const child = exec(cmd, { timeout: 60000 }, (err, _stdout, stderr) => {
+            if (err) {
+              failCount++;
+              const msg = stderr?.trim() || err.message || "unknown error";
+              failures.push({ scene: kf.scene, frame: kf.frame, error: msg });
+              console.error(`  FAILED: ${msg.split("\n")[0]}`);
+            } else {
+              successCount++;
+            }
+            resolve();
+          });
+        }),
+    );
+    await Promise.all(promises);
+    console.log(`Progress: ${Math.min(batchStart + CONCURRENCY, keyframes.length)}/${keyframes.length}`);
   }
 
   // -------------------------------------------------------------------------

@@ -121,7 +121,7 @@ const { fontFamily: inter } = loadInter();
 --caption-size: 36px;     /* Small labels, captions (absolute minimum) */
 ```
 
-**Important**: These are RECOMMENDED values. Always prefer larger sizes for better visibility. The absolute minimum font size is 36px.
+**Important**: These are RECOMMENDED values. Always prefer larger sizes for better visibility. The absolute minimum font size is 32px (enforced by style-scan.ts). Recommend 36px+ for most text.
 
 ### Text Styling
 

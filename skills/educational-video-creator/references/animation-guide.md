@@ -540,7 +540,7 @@ const SVGDrawOn: React.FC<{
   return (
     <path
       d={d}
-      stroke={color ?? COLORS.accent.primary}
+      stroke={color ?? COLORS.accent.rose}
       strokeWidth={strokeWidth}
       fill="none"
       strokeLinecap="round"
@@ -589,9 +589,9 @@ const fillOpacity = interpolate(
 
 <path
   d={d}
-  stroke={COLORS.accent.primary}
+  stroke={COLORS.accent.rose}
   strokeWidth={4}
-  fill={COLORS.accent.primary}
+  fill={COLORS.accent.rose}
   fillOpacity={fillOpacity}
   strokeDasharray={pathLength}
   strokeDashoffset={pathLength * (1 - drawDone)}
@@ -988,7 +988,7 @@ const WaveLine: React.FC<{
       <polyline
         points={points.join(' ')}
         fill="none"
-        stroke={COLORS.accent.primary}
+        stroke={COLORS.accent.rose}
         strokeWidth={4}
       />
     </svg>
@@ -1086,19 +1086,70 @@ const SequentialAnimation = ({ startFrame = 0 }) => {
 
 ## Performance Tips
 
+### Define Components at Module Level (Critical)
+
+**Never** define components inside a render function. In Remotion, the parent re-renders every frame — inner components get unmounted and remounted 30 times per second, destroying all internal state and causing visible flicker.
+
+```tsx
+// ✗ WRONG: Component defined inside render — recreated every frame
+const MyScene: React.FC = () => {
+  const CloudSVG = () => <svg>...</svg>;  // ← new function identity each frame
+  return <CloudSVG />;
+};
+
+// ✓ CORRECT: Component defined at module level
+const CloudSVG: React.FC<{ x: number }> = ({ x }) => <svg>...</svg>;
+
+const MyScene: React.FC = () => {
+  return <CloudSVG x={100} />;
+};
+```
+
+### Use React.memo for Static SVGs
+
+Wrap SVG components that don't depend on `useCurrentFrame()` with `React.memo` to prevent unnecessary re-renders:
+
+```tsx
+const AirplaneSVG = React.memo<{ color: string }>(({ color }) => (
+  <svg viewBox="0 0 200 100">
+    <path d="..." fill={color} />
+  </svg>
+));
+```
+
+### useMemo for Expensive Computations
+
+```tsx
+// ✓ Good: Memoize wave path generation
+const WaveLine: React.FC<{ amplitude: number; phase: number }> = ({ amplitude, phase }) => {
+  const points = useMemo(() => {
+    const pts: string[] = [];
+    for (let x = 0; x <= 1920; x += 4) {
+      const y = 540 + Math.sin(x * 0.01 + phase) * amplitude;
+      pts.push(`${x},${y}`);
+    }
+    return `M${pts.join(' L')}`;
+  }, [amplitude, phase]);
+
+  return <path d={points} stroke="#fff" fill="none" />;
+};
+```
+
+### SVG Complexity Guidelines
+
+- Keep SVG `<path>` count per component under 50
+- Prefer `<circle>`, `<rect>`, `<ellipse>` over complex `<path>` when possible
+- For `AnimatedText`, limit to ~100 characters (each character is an individually animated element)
+- Use `viewBox` and scale via CSS `width`/`height` rather than transforming individual elements
+
 ### Avoid Unnecessary Re-renders
 
 ```tsx
-// ✓ Good: Memoize static content
-const StaticElement = React.memo(() => (
-  <svg>...</svg>
-));
-
-// ✓ Good: Extract animation logic
+// ✓ Good: Extract animation logic into custom hooks
 const useEntrance = (startFrame: number) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  
+
   return spring({
     frame: frame - startFrame,
     fps,
@@ -1110,17 +1161,28 @@ const useEntrance = (startFrame: number) => {
 ### Optimize Complex Scenes
 
 ```tsx
-// Only render when visible
-const LazyElement = ({ enterFrame, exitFrame, children }) => {
+// Only render when visible — saves rendering cost for off-screen elements
+const LazyElement: React.FC<{
+  enterFrame: number;
+  exitFrame: number;
+  children: React.ReactNode;
+}> = ({ enterFrame, exitFrame, children }) => {
   const frame = useCurrentFrame();
-  
+
   if (frame < enterFrame || frame > exitFrame) {
     return null;
   }
-  
-  return children;
+
+  return <>{children}</>;
 };
 ```
+
+### Particle / Ambient Effect Performance
+
+- Cap particle count at 15–20 per scene
+- Use simple shapes (`<circle>`, `<rect>`) rather than complex SVGs for particles
+- Pre-compute particle positions in a `useMemo` array, only animate opacity/transform per frame
+- If ambient effects slow preview, wrap in `<LazyElement>` to skip rendering before scene entry
 
 ## Animation Checklist
 
@@ -1128,6 +1190,9 @@ Before finalizing animations:
 
 - [ ] All animations use `useCurrentFrame()`
 - [ ] No CSS transitions or animations
+- [ ] Components defined at module level, not inside render functions
+- [ ] Static SVGs wrapped in `React.memo`
+- [ ] Expensive computations wrapped in `useMemo`
 - [ ] Consistent timing across similar elements
 - [ ] Appropriate easing for the content
 - [ ] Animations serve understanding, not decoration

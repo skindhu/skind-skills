@@ -48,7 +48,7 @@ const useIconAnimation = (animateIn: boolean, startFrame: number) => {
 // ============================================
 
 export const ArrowUp: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#ffffff',
   strokeWidth = 4,
   animateIn = false,
@@ -77,7 +77,7 @@ export const ArrowUp: React.FC<IconProps> = ({
 };
 
 export const ArrowDown: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#ffffff',
   strokeWidth = 4,
   animateIn = false,
@@ -106,7 +106,7 @@ export const ArrowDown: React.FC<IconProps> = ({
 };
 
 export const ArrowLeft: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#ffffff',
   strokeWidth = 4,
   animateIn = false,
@@ -135,7 +135,7 @@ export const ArrowLeft: React.FC<IconProps> = ({
 };
 
 export const ArrowRight: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#ffffff',
   strokeWidth = 4,
   animateIn = false,
@@ -168,7 +168,7 @@ export const ArrowRight: React.FC<IconProps> = ({
 // ============================================
 
 export const Checkmark: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#00b894',
   strokeWidth = 4,
   animateIn = false,
@@ -197,7 +197,7 @@ export const Checkmark: React.FC<IconProps> = ({
 };
 
 export const Cross: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#e17055',
   strokeWidth = 4,
   animateIn = false,
@@ -226,7 +226,7 @@ export const Cross: React.FC<IconProps> = ({
 };
 
 export const QuestionMark: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#fdcb6e',
   strokeWidth = 4,
   animateIn = false,
@@ -260,7 +260,7 @@ export const QuestionMark: React.FC<IconProps> = ({
 // ============================================
 
 export const Circle: React.FC<IconProps & { filled?: boolean }> = ({
-  size = 48,
+  size = 96,
   color = '#4facfe',
   strokeWidth = 4,
   filled = false,
@@ -290,7 +290,7 @@ export const Circle: React.FC<IconProps & { filled?: boolean }> = ({
 };
 
 export const Star: React.FC<IconProps & { filled?: boolean }> = ({
-  size = 48,
+  size = 96,
   color = '#f9ed69',
   strokeWidth = 2,
   filled = true,
@@ -323,7 +323,7 @@ export const Star: React.FC<IconProps & { filled?: boolean }> = ({
 // ============================================
 
 export const Lightbulb: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#fdcb6e',
   strokeWidth = 3,
   animateIn = false,
@@ -359,7 +359,7 @@ export const Lightbulb: React.FC<IconProps> = ({
 };
 
 export const Gear: React.FC<IconProps> = ({
-  size = 48,
+  size = 96,
   color = '#74b9ff',
   strokeWidth = 3,
   animateIn = false,
