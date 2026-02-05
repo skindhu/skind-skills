@@ -254,6 +254,11 @@ Implement scenes using Remotion:
 - Phase 4 使用估算 AUDIO_SEGMENTS；Phase 4.5 rebuild-timeline 更新真实时间后，因为代码引用的是变量而非硬编码数字，视觉动画会自动同步
 - 参考 [animation-guide.md](references/animation-guide.md) "Narration-Synced Animation" 章节的实现模式
 
+**Element sizing rules (prevents "Thumbnail Syndrome" — tiny elements on a large canvas):**
+- 参考 [visual-principles.md](references/visual-principles.md) "Content Area Utilization" 确保内容填充画布（核心内容 ≥ 安全区 60%）
+- 组件默认尺寸参考 [svg-components.md](references/svg-components.md)（图标 ≥96px，流程节点 ≥160px 高，标签 ≥40px）
+- 图表/流程图应占据内容区域大部分面积，避免在 1920×1080 画布上缩成缩略图
+
 **Background rules (prevents transparent/checkerboard frames during transitions):**
 - The main composition **must** have a persistent `<AbsoluteFill>` background layer (using `COLORS.background`) that sits behind all scenes and never participates in transitions
 - Each scene component **must** also have its own solid background as the first child element

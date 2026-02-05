@@ -114,14 +114,14 @@ const { fontFamily: inter } = loadInter();
 ### Font Sizes (1920x1080)
 
 ```css
---title-size: 96px;       /* Main titles (minimum: 72px) */
---heading-size: 64px;     /* Section headings (minimum: 48px) */
---body-size: 48px;        /* Body text, labels (minimum: 40px) */
---subtitle-size: 36px;    /* Subtitles - smaller for readability */
---caption-size: 36px;     /* Small labels, captions (absolute minimum) */
+--title-size: 96px;       /* Main titles — USE THIS as default, not the 72px minimum */
+--heading-size: 64px;     /* Section headings — USE THIS as default, not the 48px minimum */
+--body-size: 48px;        /* Body text, labels — USE THIS as default, not the 40px minimum */
+--subtitle-size: 36px;    /* Subtitles */
+--caption-size: 36px;     /* Small labels, captions */
 ```
 
-**Important**: These are RECOMMENDED values. Always prefer larger sizes for better visibility. The absolute minimum font size is 32px (enforced by style-scan.ts). Recommend 36px+ for most text.
+**Important**: The values above are the **recommended defaults** — use them as starting points, not the minimums. The absolute minimum font size is 32px (enforced by style-scan.ts). Component labels (inside flow nodes, diagram elements, etc.) should use ≥ 40px.
 
 ### Text Styling
 
@@ -181,7 +181,7 @@ const subtitleStyle = {
 
 ```tsx
 // Icon component pattern
-const Icon = ({ size = 96, color = '#ffffff' }) => (
+const Icon = ({ size = 120, color = '#ffffff' }) => (
   <svg width={size} height={size} viewBox="0 0 48 48">
     {/* Simple, geometric shapes */}
     {/* Consistent stroke width */}
@@ -191,7 +191,8 @@ const Icon = ({ size = 96, color = '#ffffff' }) => (
 ```
 
 Icon Design Rules:
-- **Minimum size: 72px** (default: 96px for good visibility)
+- **Minimum size: 96px** (default: 120px for good visibility at 1920×1080)
+- In flow charts and diagrams, icon containers should be **120-160px**
 - Use consistent stroke width (2-4px scaled)
 - Round line caps and joins
 - Simple, recognizable shapes

@@ -209,10 +209,10 @@ export const FONT_FAMILIES = {
 // ============================================
 
 export const FONT_SIZES = {
-  title: 72,       // Main titles
-  heading: 48,     // Section headings
-  body: 36,        // Body text, subtitles
-  caption: 36,     // Small labels, captions (style-check-rules minimum: 32)
+  title: 96,       // Main titles (minimum: 72 — use this recommended value as default)
+  heading: 64,     // Section headings (minimum: 48)
+  body: 48,        // Body text, labels (minimum: 40)
+  caption: 36,     // Small labels, captions (minimum: 32)
   tiny: 32,        // Disclaimers, credits (absolute minimum per style-check-rules)
 
   // Absolute minimum for readability (enforced by style-scan.ts)

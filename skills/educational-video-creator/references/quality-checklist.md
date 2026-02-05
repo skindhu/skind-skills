@@ -97,6 +97,7 @@ Render actual frame screenshots and use image analysis to check visual issues th
    | Animation reasonableness | Is animation smooth, rhythm matches content, aids understanding | 🟡Important |
    | Transparent/checkerboard frames | Are there frames showing checkerboard (transparent) or pure white/black backgrounds | 🟡Important |
    | **Ambient atmosphere** | Does the scene have ambient effects (particles, glow, grain, subtle motion)? Completely static backgrounds feel flat | 🟡Important |
+   | **Element sizing adequacy** | **Are icons, flow nodes, charts, and other key visual elements large enough on screen? Content occupying ≤30% of the canvas = "Thumbnail Syndrome"** | 🔴Critical |
    | **Visual-narration sync** | **Do visual elements (arrows, diagrams, icons) appear at the same time as their corresponding narration/subtitle? Elements appearing >10 frames (0.33s) before subtitle = desync** | 🔴Critical |
 
 3. **Generate visual report**: For each issue found, include:
@@ -193,11 +194,14 @@ Output Markdown report, each issue contains:
 **修复策略**: 非 8px 倍数 → 四舍五入到最近的 8px 倍数（如 14→16, 25→24）。
 
 ### 5. 元素尺寸
-- 居中主体宽度: ≥ 画布宽度 20% (≥ 384px)，否则 🟡重要
-- 图标/箭头最小尺寸: ≥ 72px（推荐 96px）
+- 图标/箭头最小尺寸: ≥ 96px（72px 在全屏视频中仍然偏小），< 96px 为 🟡重要
+- 居中主体宽度: ≥ 画布宽度 25% (≥ 480px)，否则 🟡重要
+- **复合元素**（流程节点 = 图标 + 标签 + 容器）: 整体高度 ≥ 160px，否则 🟡重要
+- **内容填充率**: 核心内容区域（流程图、图表、插图）应占据安全区 ≥ 60% 的面积。内容仅占 ≤ 30% 的画布 = 🔴严重（"缩略图综合征"）
+- **组件内文字**: fontSize ≥ 40px（32px 是绝对底线，但组件标签推荐 40px+），< 40px 为 🟡重要
 - SVG strokeWidth 标准值: 2, 4, 6，非标准值 🟢轻微
 
-**修复策略**: 图标/箭头 < 72px → 改为 96；居中主体 < 384px → 按比例放大到 384px（同时等比调整高度）。
+**修复策略**: 图标/箭头 < 96px → 改为 120；居中主体 < 480px → 放大到 480px+；复合元素 < 160px → 放大整个组合；内容仅占画布 30% 以下 → 整体放大布局使内容填充 60%+。参考 visual-principles.md "Content Area Utilization" 章节。
 
 ### 6. 圆角
 标准 borderRadius 值: 4, 8, 16 (px) 或 "50%" (圆形)
@@ -286,6 +290,6 @@ Output Markdown report, each issue contains:
 **修复策略**: 截图审查发现的问题需根据具体描述定位源码并修复（无固定策略，靠 AI 根据报告中的修复建议判断）。
 
 ### 严重级别汇总
-- 🔴严重(必修): fontSize < 32px、超出安全区、禁用动画模式、文字重叠不可读、截图中文字被遮挡、视觉-旁白硬编码 desync
-- 🟡重要(应修): 颜色不在调色板、间距非 8px 倍数、居中元素 < 20% 画布宽、图标 < 72px、画面视觉不平衡
+- 🔴严重(必修): fontSize < 32px、超出安全区、禁用动画模式、文字重叠不可读、截图中文字被遮挡、视觉-旁白硬编码 desync、内容填充率 ≤30%（缩略图综合征）
+- 🟡重要(应修): 颜色不在调色板、间距非 8px 倍数、居中元素 < 25% 画布宽、图标 < 96px、复合元素 < 160px、组件内文字 < 40px、画面视觉不平衡
 - 🟢轻微(可优化): 间距微偏、圆角不标准、strokeWidth 非标准、整体美观微调

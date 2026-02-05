@@ -18,6 +18,7 @@ Information visualization, composition, and layout principles for educational vi
   - [Progressive Disclosure](#progressive-disclosure)
   - [Text on Screen](#text-on-screen)
 - [Layout Patterns](#layout-patterns)
+- [Content Area Utilization](#content-area-utilization)
 - [Color in Information Design](#color-in-information-design)
 - [Callout & Annotation System](#callout--annotation-system)
 - [Visual Consistency Checklist](#visual-consistency-checklist)
@@ -415,6 +416,58 @@ Use for: Processes, sequences
 └─────────────────────────────────────────┘
 Use for: Historical events, processes
 ```
+
+## Content Area Utilization
+
+### Fill the Canvas
+
+On a 1920×1080 canvas, the safe content area is approximately 1720×960. Visual content should **fill this area**, not huddle in the center at thumbnail scale.
+
+### Minimum Fill Ratios
+
+| Content Type | Minimum Fill | Target Fill | Example |
+|-------------|-------------|-------------|---------|
+| Single center subject | 30% of content area width (≥ 500px) | 40-60% | A single diagram or illustration |
+| Flow chart / process | 80% of content area width (≥ 1400px) | 90%+ | Horizontal flow with 3-5 nodes |
+| Comparison (side-by-side) | Each side ≥ 40% width (≥ 680px) | 45% each | Before/after, A vs B |
+| List/steps | 60% width, 70% height | 70%/80% | Staggered list of 3-5 items |
+| Data chart | 60% of content area (≥ 1000×500px) | 70% | Bar chart, line chart |
+
+### Composite Element Sizing
+
+A "composite element" is a group (e.g., flow node = icon + label + container). Minimum sizes for the **entire composite**:
+
+| Composite Type | Minimum Size | Example |
+|---------------|-------------|---------|
+| Flow chart node (icon + label) | 160×180px | Circle icon above label text |
+| Info card (icon + title + description) | 300×200px | Feature highlight card |
+| Legend item (color swatch + label) | 40px height | Chart legend |
+| Diagram node with connections | 120×120px | Mind map or tree node |
+
+### Anti-Pattern: Thumbnail Syndrome
+
+```
+❌ WRONG: Everything shrunk to ~50-80px
+┌─────────────────────────────────────────┐
+│                                         │
+│                                         │
+│        ○→○→○→○                          │  ← Flow chart using 25% of canvas
+│                                         │
+│                                         │
+└─────────────────────────────────────────┘
+
+✓ CORRECT: Elements fill the content area
+┌─────────────────────────────────────────┐
+│  Title                                  │
+│  ┌─────┐    ┌─────┐    ┌─────┐        │
+│  │ 🏭  │───▶│ 💰  │───▶│ 📈  │        │  ← Flow chart using 85% of canvas
+│  │企业 │    │工资 │    │增长 │        │
+│  └─────┘    └─────┘    └─────┘        │
+│                                 Subtitle│
+└─────────────────────────────────────────┘
+```
+
+---
 
 ## Color in Information Design
 

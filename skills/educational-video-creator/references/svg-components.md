@@ -36,7 +36,7 @@ interface ComponentProps {
 }
 
 export const MyComponent: React.FC<ComponentProps> = ({
-  size = 100,
+  size = 120,
   color = '#ffffff',
   animateIn = true,
   startFrame = 0,
@@ -103,7 +103,7 @@ const rotationMap: Record<Direction, number> = {
 
 export const Arrow: React.FC<ArrowProps> = ({
   direction,
-  size = 80,
+  size = 120,
   color = '#4facfe',
   strokeWidth = 6,
   animateIn = true,
@@ -172,7 +172,7 @@ export const Arrow: React.FC<ArrowProps> = ({
         <span
           style={{
             marginTop: 8,
-            fontSize: 16,
+            fontSize: 40,
             fontWeight: 600,
             color: labelColor,
             opacity: scale,
@@ -206,7 +206,7 @@ const FORCE_CONFIG = {
 
 export const ForceArrow: React.FC<ForceArrowProps> = ({
   type,
-  size = 120,
+  size = 160,
   showLabel = true,
   animateIn = true,
   startFrame = 0,
@@ -255,7 +255,7 @@ interface IconProps {
 
 export const Icon: React.FC<IconProps> = ({
   children,
-  size = 64,
+  size = 96,
   backgroundColor = 'rgba(255,255,255,0.1)',
   borderRadius = 16,
   padding = 12,
@@ -309,8 +309,8 @@ interface ProgressBarProps {
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
   progress,
-  width = 300,
-  height = 20,
+  width = 500,
+  height = 24,
   backgroundColor = 'rgba(255,255,255,0.2)',
   fillColor = '#4facfe',
   borderRadius = 10,
@@ -368,7 +368,7 @@ interface AnimatedTextProps {
 
 export const AnimatedText: React.FC<AnimatedTextProps> = ({
   text,
-  fontSize = 36,
+  fontSize = 48,
   color = '#ffffff',
   fontWeight = 400,
   animationType = 'fade',
@@ -448,11 +448,11 @@ interface DiagramProps {
 export const AnimatedDiagram: React.FC<DiagramProps> = ({
   centerElement,
   surroundingElements,
-  spacing = 100,
+  spacing = 160,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  
+
   const centerProgress = spring({
     frame,
     fps,
@@ -573,7 +573,7 @@ import animationData from './animation.json';
 export const LottieAnimation: React.FC<{
   width?: number;
   height?: number;
-}> = ({ width = 300, height = 300 }) => {
+}> = ({ width = 400, height = 400 }) => {
   return (
     <Lottie
       animationData={animationData}
@@ -610,8 +610,8 @@ interface BarChartProps {
 
 export const AnimatedBarChart: React.FC<BarChartProps> = ({
   data,
-  width = 600,
-  height = 400,
+  width = 900,
+  height = 500,
   startFrame = 0,
   staggerDelay = 8,
 }) => {
@@ -689,8 +689,8 @@ interface LineChartProps {
 
 export const AnimatedLineChart: React.FC<LineChartProps> = ({
   points,
-  width = 600,
-  height = 300,
+  width = 900,
+  height = 400,
   color,
   startFrame = 0,
   drawDuration = 60,
@@ -786,7 +786,7 @@ interface PieChartProps {
 
 export const AnimatedPieChart: React.FC<PieChartProps> = ({
   segments,
-  size = 300,
+  size = 400,
   startFrame = 0,
 }) => {
   const frame = useCurrentFrame();
@@ -951,7 +951,7 @@ const FlowNode: React.FC<{
     }}>
       {/* Icon area with soft background glow */}
       <div style={{
-        width: 72, height: 72, borderRadius: 20,
+        width: 120, height: 120, borderRadius: 32,
         background: `radial-gradient(circle, ${color}33 0%, transparent 70%)`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -959,7 +959,7 @@ const FlowNode: React.FC<{
       </div>
       {/* Label */}
       <span style={{
-        fontSize: 22, fontWeight: 600, color: '#ffffff',
+        fontSize: 40, fontWeight: 600, color: '#ffffff',
         textShadow: `0 0 8px ${color}`,
       }}>
         {label}
@@ -1058,6 +1058,19 @@ const AmbientParticles: React.FC<{
   );
 };
 ```
+
+---
+
+## Sizing for 1920×1080
+
+Component defaults in this guide are calibrated for a **1920×1080** canvas. When instantiating:
+
+- **Icon/arrow sizes**: minimum 96px, prefer 120–160px for key visuals
+- **Labels/text inside components**: minimum 40px (never below 32px absolute floor)
+- **Composite elements** (flow node = icon + label + container): total height **≥ 160px**
+- **Charts/diagrams**: occupy **≥ 60% of the content area** (roughly 1000×500 or larger)
+
+If elements look small in the Remotion preview, they **will** look small in the final video. Scale up aggressively — it is far more common for elements to be too small than too large.
 
 ---
 
