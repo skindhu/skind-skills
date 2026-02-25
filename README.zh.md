@@ -57,7 +57,7 @@ npx add-skill skindhu/skind-skills
 
 | 插件 | 说明 | 包含技能 |
 |------|------|----------|
-| **skind-skills** | 投资研究、教育视频制作、文章深度分析 | [us-stock-researcher](#us-stock-researcher)、[educational-video-creator](#educational-video-creator)、[deep-article-research](#deep-article-research) |
+| **skind-skills** | 投资研究、教育视频制作 | [us-stock-researcher](#us-stock-researcher)、[educational-video-creator](#educational-video-creator) |
 
 ## 更新技能
 
@@ -185,40 +185,6 @@ your-workspace/
     └── package.json
 ```
 
-### deep-article-research
-
-基于 Gemini Deep Research 的文章论点深度验证与分析，输出专业中文分析报告。
-
-**功能特点：**
-- 🔗 通过 agent-browser 或 WebFetch 获取文章内容
-- 🧠 提取核心论点、证据链和隐含假设
-- 🔍 Gemini Deep Research 网络验证每个论点
-- 📝 专业中文分析报告输出
-
-**前置要求：**
-- `GEMINI_API_KEY` 环境变量
-- `agent-browser` 技能（可选，可回退到 WebFetch）
-
-**使用示例：**
-
-```bash
-# 深度分析文章
-帮我深度分析这篇文章 https://example.com/article
-
-# 验证文章论点
-帮我验证这篇博文的论点 https://example.com/post
-```
-
-**输出目录：**
-
-```
-tmp/article-deep-research/
-└── {slug}/
-    ├── article-raw.txt                        # 原始文章内容
-    ├── argument-extraction-YYYY-MM-DD.md      # 论点提取
-    └── {slug}-Analysis-Report-YYYY-MM-DD.md   # 最终分析报告
-```
-
 ## 环境配置
 
 ```bash
@@ -226,7 +192,7 @@ tmp/article-deep-research/
 export SEC_EDGAR_COMPANY_NAME="你的公司名"
 export SEC_EDGAR_EMAIL="your@email.com"
 
-# Gemini 模式必需（us-stock-researcher、deep-article-research）
+# Gemini 模式必需（us-stock-researcher）
 export GEMINI_API_KEY="your_gemini_api_key"
 ```
 

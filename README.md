@@ -56,7 +56,7 @@ Simply tell Claude Code:
 
 | Plugin | Description | Included Skills |
 |--------|-------------|-----------------|
-| **skind-skills** | Investment research, educational video creation, and deep article analysis | [us-stock-researcher](#us-stock-researcher), [educational-video-creator](#educational-video-creator), [deep-article-research](#deep-article-research) |
+| **skind-skills** | Investment research and educational video creation | [us-stock-researcher](#us-stock-researcher), [educational-video-creator](#educational-video-creator) |
 
 ## Update Skills
 
@@ -172,40 +172,6 @@ your-workspace/
     └── package.json
 ```
 
-### deep-article-research
-
-Deep research and verification of article arguments using Gemini Deep Research, outputting professional Chinese analysis reports.
-
-**Features:**
-- 🔗 Fetch article content via agent-browser or WebFetch
-- 🧠 Extract core arguments, evidence chains, and implicit assumptions
-- 🔍 Gemini Deep Research for web-based argument verification
-- 📝 Professional Chinese analysis report output
-
-**Prerequisites:**
-- `GEMINI_API_KEY` environment variable
-- `agent-browser` skill (optional, fallback to WebFetch)
-
-**Usage Examples:**
-
-```bash
-# Analyze and verify an article
-帮我深度分析这篇文章 https://example.com/article
-
-# Fact-check a blog post
-Verify the arguments in this article: https://example.com/post
-```
-
-**Output:**
-
-```
-tmp/article-deep-research/
-└── {slug}/
-    ├── article-raw.txt                        # Raw article content
-    ├── argument-extraction-YYYY-MM-DD.md      # Argument extraction
-    └── {slug}-Analysis-Report-YYYY-MM-DD.md   # Final analysis report
-```
-
 ## Environment Configuration
 
 ```bash
@@ -213,7 +179,7 @@ tmp/article-deep-research/
 export SEC_EDGAR_COMPANY_NAME="YourCompany"
 export SEC_EDGAR_EMAIL="your@email.com"
 
-# Required for Gemini Mode (us-stock-researcher, deep-article-research)
+# Required for Gemini Mode (us-stock-researcher)
 export GEMINI_API_KEY="your_gemini_api_key"
 ```
 
