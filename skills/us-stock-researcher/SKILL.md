@@ -19,6 +19,14 @@ Institutional-grade deep analysis of US stock SEC filings, outputting profession
 
 ## Quick Start Workflow
 
+### Path Variables
+
+Before starting, determine these two paths:
+- `<project_root>`: The user's current working directory (where the agent session started). All output files go here.
+- `<skill_dir>`: The directory containing this SKILL.md file. Use its absolute path to reference scripts.
+
+**IMPORTANT: Always use absolute paths when running scripts. Never `cd` into the skill directory.**
+
 ### Step 1: Determine Filing Period
 
 **If user did NOT specify a period**, use WebSearch to find the latest filing:
@@ -37,7 +45,7 @@ Inform user: "根据搜索，{TICKER} 最新的财报是 {10-K/10-Q}（截至 {p
 ### Step 2: Download Filing
 
 ```bash
-python3.11 scripts/download_sec_filings.py --ticker <TICKER> --type <10-K|10-Q|6-K> --limit 1
+python3.11 <skill_dir>/scripts/download_sec_filings.py --ticker <TICKER> --type <10-K|10-Q|6-K> --limit 1 --project-root <project_root>
 ```
 
 Output: `<project_root>/investment-research/{TICKER}/tmp/sec_filings/cleaned.txt`
@@ -46,43 +54,68 @@ Output: `<project_root>/investment-research/{TICKER}/tmp/sec_filings/cleaned.txt
 
 1. Read first 5000 characters of filing
 2. Identify company industry
-3. Select modules from `industry-analysis-modules.md`
-4. Merge with `financial-analysis-framework.md`
-5. Save to `tmp/analysis-framework-YYYY-MM-DD.md`
+3. Select modules from `<skill_dir>/industry-analysis-modules.md`
+4. Merge with `<skill_dir>/financial-analysis-framework.md`
+5. Save to `<project_root>/investment-research/<TICKER>/tmp/analysis-framework-YYYY-MM-DD.md`
 
 ### Step 4: Execute Deep Research
 
-**Gemini Mode:**
+**Gemini Mode (full two-phase analysis):**
 ```bash
-python3.11 scripts/gemini_deep_research.py \
-  --input <cleaned.txt path> \
-  --prompt <analysis framework path> \
+python3.11 <skill_dir>/scripts/gemini_deep_research.py \
+  --input <project_root>/investment-research/<TICKER>/tmp/sec_filings/cleaned.txt \
+  --prompt <project_root>/investment-research/<TICKER>/tmp/analysis-framework-YYYY-MM-DD.md \
   --output-dir <project_root>/investment-research/<TICKER> \
   --ticker <TICKER> \
   --company <Company Name> \
   --phase all
 ```
 
+**Gemini Mode (local filing analysis only):**
+```bash
+python3.11 <skill_dir>/scripts/gemini_deep_research.py \
+  --input <project_root>/investment-research/<TICKER>/tmp/sec_filings/cleaned.txt \
+  --prompt <project_root>/investment-research/<TICKER>/tmp/analysis-framework-YYYY-MM-DD.md \
+  --output-dir <project_root>/investment-research/<TICKER> \
+  --ticker <TICKER> \
+  --company <Company Name> \
+  --phase local
+```
+
+**Gemini Mode (web research only, requires local phase output):**
+```bash
+python3.11 <skill_dir>/scripts/gemini_deep_research.py \
+  --input <project_root>/investment-research/<TICKER>/tmp/sec_filings/cleaned.txt \
+  --prompt <project_root>/investment-research/<TICKER>/tmp/analysis-framework-YYYY-MM-DD.md \
+  --output-dir <project_root>/investment-research/<TICKER> \
+  --ticker <TICKER> \
+  --company <Company Name> \
+  --phase web \
+  --phase1-output <project_root>/investment-research/<TICKER>/tmp/phase1-YYYY-MM-DD.md
+```
+
+**IMPORTANT: `--phase` only accepts three values: `all`, `local`, `web`. Do NOT use numeric values like `1` or `2`.**
+
 **Claude Native Mode:**
-Follow `prompts/claude-deep-research-protocol.md` for complete 7-phase execution.
+Follow `<skill_dir>/prompts/claude-deep-research-protocol.md` for complete 7-phase execution.
 
 ### Step 5: Format and Save
 
-Format per `markdown-formatter-rules.md`, save to `investment-research/{TICKER}/`
+Format per `<skill_dir>/markdown-formatter-rules.md`, save to `<project_root>/investment-research/{TICKER}/`
 
 ---
 
 ## Mode 1: Gemini Deep Research
 
 ```
-User Input → Download Filing → Framework Generation → Phase 1 Filing Analysis → Phase 2 Web Research → Integration → Final Report
+User Input → Download Filing → Framework Generation → Local: Filing Analysis → Web: Market Research → Integration → Final Report
                                                               ↓                         ↓
                                                       (Gemini Deep Research)    (Gemini Deep Research)
 ```
 
-- **Phase 1**: Upload filing via Files API, Gemini analyzes comprehensively
-- **Phase 2**: Web search for competitors, trends, management verification
-- **Integration**: Claude merges Phase 1 + Phase 2 per `prompts/report-merge-prompt.md`
+- **Local phase** (`--phase local`): Upload filing via Files API, Gemini analyzes comprehensively
+- **Web phase** (`--phase web`): Web search for competitors, trends, management verification
+- **Integration**: Claude merges local + web results per `<skill_dir>/prompts/report-merge-prompt.md`
 
 ---
 
@@ -90,7 +123,7 @@ User Input → Download Filing → Framework Generation → Phase 1 Filing Analy
 
 Uses **7-Phase Deep Research + Graph of Thoughts (GoT)** methodology.
 
-**For complete execution details, see:** `prompts/claude-deep-research-protocol.md`
+**For complete execution details, see:** `<skill_dir>/prompts/claude-deep-research-protocol.md`
 
 ### 7-Phase Overview
 
@@ -135,8 +168,8 @@ Uses **7-Phase Deep Research + Graph of Thoughts (GoT)** methodology.
 ├── tmp/
 │   ├── sec_filings/cleaned.txt
 │   ├── analysis-framework-YYYY-MM-DD.md
-│   ├── phase1-YYYY-MM-DD.md
-│   └── phase2-YYYY-MM-DD.md
+│   ├── phase1-YYYY-MM-DD.md             # Local phase (--phase local) output
+│   └── phase2-YYYY-MM-DD.md             # Web phase (--phase web) output
 └── {TICKER}-Investment-Report-YYYY-MM-DD.md
 ```
 

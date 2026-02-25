@@ -12,21 +12,12 @@ import sys
 from pathlib import Path
 
 
-def get_project_root() -> Path:
-    """
-    Get project root directory
-    Uses current working directory (cwd) as project root,
-    because Claude Code sets cwd to user's project directory when running commands.
-    """
-    return Path.cwd()
-
-
-def get_default_output_dir(ticker: str) -> str:
+def get_default_output_dir(ticker: str, project_root: str = None) -> str:
     """
     Get default output directory: <project_root>/investment-research/{TICKER}/tmp/sec_filings
     """
-    project_root = get_project_root()
-    return str(project_root / "investment-research" / ticker / "tmp" / "sec_filings")
+    root = Path(project_root) if project_root else Path.cwd()
+    return str(root / "investment-research" / ticker / "tmp" / "sec_filings")
 
 try:
     from sec_edgar_downloader import Downloader
@@ -50,7 +41,8 @@ def download_filings(
     filing_type: str = "10-K",
     limit: int = 1,
     output_dir: str = None,
-    auto_clean: bool = True
+    auto_clean: bool = True,
+    project_root: str = None
 ) -> list[Path]:
     """
     Download SEC filings
@@ -61,13 +53,13 @@ def download_filings(
         limit: Number of periods to download
         output_dir: Output directory, defaults to <project_root>/investment-research/{TICKER}/tmp/sec_filings
         auto_clean: Whether to auto-clean HTML and binary data (default True)
+        project_root: Explicit project root directory (defaults to cwd)
 
     Returns:
         List of downloaded file paths (if auto_clean=True, returns cleaned files)
     """
-    # If output directory not specified, use default path
     if output_dir is None:
-        output_dir = get_default_output_dir(ticker)
+        output_dir = get_default_output_dir(ticker, project_root)
 
     # Get SEC EDGAR access identity
     company_name = os.getenv("SEC_EDGAR_COMPANY_NAME", "InvestmentResearch")
@@ -146,6 +138,11 @@ def main():
         action="store_true",
         help="Don't auto-clean files (keep original HTML and binary data)"
     )
+    parser.add_argument(
+        "--project-root",
+        default=None,
+        help="Project root directory for default output path (default: current working directory)"
+    )
 
     args = parser.parse_args()
 
@@ -154,7 +151,8 @@ def main():
         filing_type=args.type,
         limit=args.limit,
         output_dir=args.output,
-        auto_clean=not args.no_clean
+        auto_clean=not args.no_clean,
+        project_root=args.project_root
     )
 
     if files:
