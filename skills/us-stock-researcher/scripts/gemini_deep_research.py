@@ -118,7 +118,11 @@ class GeminiDeepResearchAnalyzer:
         # 4. Wait for indexing to complete
         print("Waiting for file indexing to complete...")
         wait_count = 0
+        max_index_wait = 600  # 5 minutes
+        start_time = time.time()
         while not operation.done:
+            if time.time() - start_time > max_index_wait:
+                raise TimeoutError(f"File indexing timed out after {max_index_wait}s")
             time.sleep(5)
             wait_count += 1
             operation = self.client.operations.get(operation)
