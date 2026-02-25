@@ -43,8 +43,8 @@ npx add-skill skindhu/skind-skills
 **方式二：直接安装**
 
 ```bash
-# 安装投资技能插件
-/plugin install investment-skills@skind-skills
+# 安装 skind-skills 插件
+/plugin install skind-skills@skind-skills
 ```
 
 **方式三：告诉 Agent**
@@ -57,9 +57,7 @@ npx add-skill skindhu/skind-skills
 
 | 插件 | 说明 | 包含技能 |
 |------|------|----------|
-| **investment-skills** | 投资研究与分析 | [us-stock-researcher](#us-stock-researcher) |
-| **educational-video-creator** | 教育视频制作 | [educational-video-creator](#educational-video-creator) |
-| **research-skills** | 文章深度研究与分析 | [deep-article-research](#deep-article-research) |
+| **skind-skills** | 投资研究、教育视频制作、文章深度分析 | [us-stock-researcher](#us-stock-researcher)、[educational-video-creator](#educational-video-creator)、[deep-article-research](#deep-article-research) |
 
 ## 更新技能
 

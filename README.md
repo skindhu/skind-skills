@@ -42,8 +42,8 @@ In Claude Code, run:
 **Option 2: Direct Install**
 
 ```bash
-# Install investment skills plugin
-/plugin install investment-skills@skind-skills
+# Install skind-skills plugin
+/plugin install skind-skills@skind-skills
 ```
 
 **Option 3: Tell the Agent**
@@ -56,9 +56,7 @@ Simply tell Claude Code:
 
 | Plugin | Description | Included Skills |
 |--------|-------------|-----------------|
-| **investment-skills** | Investment research and analysis | [us-stock-researcher](#us-stock-researcher) |
-| **educational-video-creator** | Educational video production | [educational-video-creator](#educational-video-creator) |
-| **research-skills** | Deep article research and analysis | [deep-article-research](#deep-article-research) |
+| **skind-skills** | Investment research, educational video creation, and deep article analysis | [us-stock-researcher](#us-stock-researcher), [educational-video-creator](#educational-video-creator), [deep-article-research](#deep-article-research) |
 
 ## Update Skills
 
