@@ -26,6 +26,15 @@
       "skills": [
         "./skills/educational-video-creator"
       ]
+    },
+    {
+      "name": "research-skills",
+      "description": "Deep research and analysis for articles and long-form content",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/deep-article-research"
+      ]
     }
   ]
 }
